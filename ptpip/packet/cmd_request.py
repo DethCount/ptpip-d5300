@@ -48,3 +48,16 @@ class PtpIpCmdRequest(PtpIpPacket):
             + struct.pack('H', self.ptp_cmd) \
             + self.transaction_id \
             + self.args
+
+    def __str__(self):
+        return 'PtpIpCmdRequest: ' + "\n" \
+            + "\t" + 'cmdtype: ' + str(self.cmdtype) + "\n" \
+            + "\t" + 'unknown: ' + str(self.unkown) + "\n" \
+            + "\t" + 'ptp_cmd: ' + str(self.ptp_cmd) + "\n" \
+            + "\t" + 'param1: ' + str(self.param1) + "\n" \
+            + "\t" + 'param2: ' + str(self.param2) + "\n" \
+            + "\t" + 'param3: ' + str(self.param3) + "\n" \
+            + "\t" + 'param4: ' + str(self.param4) + "\n" \
+            + "\t" + 'param5: ' + str(self.param5) + "\n" \
+            + "\t" + 'transaction_id: ' + str(self.transaction_id) + "\n"
+

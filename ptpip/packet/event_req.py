@@ -15,3 +15,8 @@ class PtpIpEventReq(PtpIpPacket):
 
     def data(self):
         return self.cmdtype + self.session_id
+
+    def __str__(self):
+        return 'PtpIpEventReq: ' + "\n" \
+            + "\t" + 'cmdtype: ' + str(self.cmdtype) + "\n" \
+            + "\t" + 'session_id: ' + str(self.session_id) + "\n"

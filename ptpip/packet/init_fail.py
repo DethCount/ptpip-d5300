@@ -7,3 +7,7 @@ class PtpIpInitFail(PtpIpPacket):
     def __init__(self, data=None):
         super(PtpIpInitFail, self).__init__()
         self.cmdtype = struct.pack('I', 0x05)
+
+    def __str__(self):
+        return 'PtpIpInitFail: ' + "\n" \
+            + "\t" + 'cmdtype: ' + str(self.cmdtype) + "\n"

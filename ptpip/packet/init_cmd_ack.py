@@ -11,3 +11,10 @@ class PtpIpInitCmdAck(PtpIpPacket):
             self.session_id = data[0:4]
             self.guid = data[4:20]
             self.hostname = data[20:]
+
+    def __str__(self):
+        return 'PtpIpInitCmdAck: ' + "\n" \
+            + "\t" + 'cmdtype: ' + str(self.cmdtype) + "\n" \
+            + "\t" + 'session_id: ' + str(self.session_id) + "\n" \
+            + "\t" + 'guid: ' + str(self.guid) + "\n" \
+            + "\t" + 'hostname: ' + str(self.hostname) + "\n"

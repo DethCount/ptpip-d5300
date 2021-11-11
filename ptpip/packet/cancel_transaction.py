@@ -9,3 +9,8 @@ class PtpIpCancelTransaction(PtpIpPacket):
         super(PtpIpCancelTransaction, self).__init__()
         if data is not None:
             self.transaction_id = data[0:4]
+
+    def __str__(self):
+        return 'PtpIpCancelTransaction: ' + "\n" \
+            + "\t" + 'cmdtype: ' + str(self.cmdtype) + "\n" \
+            + "\t" + 'transaction_id: ' + str(self.transaction_id) + "\n"

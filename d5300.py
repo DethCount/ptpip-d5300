@@ -1,3 +1,4 @@
+import asyncio
 import io
 import sys
 import struct
@@ -7,26 +8,55 @@ from ptpip.cmd_type import CmdType
 from ptpip.event_type import EventType
 from ptpip.connection import PtpIpConnection
 from ptpip.packet.cmd_request import PtpIpCmdRequest
-from ptpip.data_object.device_info import DeviceInfo
 
 from PIL import Image
-from threading import Thread
-
-# START
-# open up a PTP/IP connection, default IP and Port is host='192.168.1.1', port=15740
-conn = PtpIpConnection()
-conn.open()
-
-# Start the Thread which is constantly checking the status of the camera and which is
-# processing new command packages which should be send
-thread = Thread(target=conn.communication_thread)
-thread.daemon = True
-thread.start()
+from threading import Thread, get_ident
 
 
-# create a PTP/IP command request device info and add it to the queue of the PTP/IP connection object
-ptpip_cmd = PtpIpCmdRequest(transaction_id=1, cmd=CmdType.GetDeviceInfo.value)
-ptpip_packet = conn.send_ptpip_cmd(ptpip_cmd)
+def setup():
+    conn = PtpIpConnection()
+
+    conn.open()
+
+    thread_comm = Thread(target=conn.communication_thread, args=(1,))
+    thread_comm.daemon = True
+    thread_comm.start()
+
+    return conn
+
+async def loop(conn):
+    print('loop')
+    # START
+    # open up a PTP/IP connection, default IP and Port is host='192.168.1.1', port=15740
+
+    # Start the Thread which is constantly checking the status of the camera and which is
+    # processing new command packages which should be send
+
+
+    # thread_obj = Thread(target=conn.treat_object_data_queue, args=(conn, 2))
+    # thread_obj.daemon = True
+    # thread_obj.start()
+
+    # create a PTP/IP command request device info and add it to the queue of the PTP/IP connection object
+    # ptpip_cmd = PtpIpCmdRequest(transaction_id=1, cmd=CmdType.GetDeviceInfo.value)
+    # ptpip_packet = conn.send_ptpip_cmd(ptpip_cmd)
+
+    device = await conn.get_device_info()
+    # print('Device: ' + str(device))
+
+    for idx, prop in enumerate(device.devicePropertiesSupported):
+        prop_desc = await conn.get_device_prop_desc(prop=prop, transaction_id=0x100 & idx)
+        # print('Prop desc(' + str(idx) + '):' + "\n" + str(prop_desc))
+
+
+event_loop = asyncio.get_event_loop()
+
+try:
+    event_loop.run_until_complete(loop(setup()))
+
+except KeyboardInterrupt:
+    event_loop.stop()
+    pass
 
 """
 # create a PTP/IP command request object and add it to the queue of the PTP/IP connection object
@@ -64,27 +94,7 @@ for event in conn.event_queue:
 """
 # give the thread some time to get the object
 
-while True:
-    print('Objects in queue: ' + str(len(conn.object_queue)))
-
-    for idx, data_object in enumerate(conn.object_queue):
-        transaction_id = struct.unpack('I', data_object.packet.transaction_id)[0]
-        print('Response to transaction ' + str(transaction_id))
-
-        if transaction_id == 1:
-            device = DeviceInfo(data_object.data)
-            print(str(device))
-        elif transaction_id == 4:
-            data_stream = io.BytesIO(data_object.data)
-            img = Image.open(data_stream)
-            img.save('/tmp/test_' + str(idx) + '.jpg')
-            print('Image saved')
-        else:
-            print('Unknown transaction: ' + str(transaction_id))
-
-        conn.object_queue.pop(idx)
-
-    time.sleep(2)
+# conn.treat_object_data_queue(conn=conn, delay=2)
 
 """
 time.sleep(50000000)

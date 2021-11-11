@@ -20,3 +20,9 @@ class PtpIpInitCmdReq(PtpIpPacket):
 
     def data(self):
         return self.cmdtype + self.guid + self.hostname
+
+    def __str__(self):
+        return 'PtpIpInitCmdReq: ' + "\n" \
+            + "\t" + 'cmdtype: ' + str(self.cmdtype) + "\n" \
+            + "\t" + 'guid: ' + str(self.guid) + "\n" \
+            + "\t" + 'hostname: ' + str(self.hostname) + "\n"

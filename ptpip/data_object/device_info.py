@@ -5,31 +5,29 @@ from ptpip.functional_mode import FunctionalMode
 from ptpip.object_format import ObjectFormat
 from ptpip.vendor_extension import VendorExtension
 
-from .data_object import PtpIpDataObject
+from .data_object import DataObject
 
 class DeviceInfo(object):
-    def __init__(self, data):
+    def __init__(self, packet, data):
         super(DeviceInfo, self).__init__()
+        self.packet = packet
 
-        (self.standardVersion, pos) = PtpIpDataObject.ParseUint16(data, 0)
-        (self.vendorExtensionId, pos) = PtpIpDataObject.ParseUint32(data, pos)
-        (self.vendorExtensionVersion, pos) = PtpIpDataObject.ParseUint16(data, pos)
-        (self.vendorExtensionDesc, pos) = PtpIpDataObject.ParseString(data, pos)
-        (self.functionalMode, pos) = PtpIpDataObject.ParseUint16(data, pos)
-        (self.operationsSupported, pos) = PtpIpDataObject.ParseArray('Uint16', data, pos)
-        (self.eventsSupported, pos) = PtpIpDataObject.ParseArray('Uint16', data, pos)
-        (self.devicePropertiesSupported, pos) = PtpIpDataObject.ParseArray('Uint16', data, pos)
-        (self.captureFormats, pos) = PtpIpDataObject.ParseArray('Uint16', data, pos)
-        (self.imageFormats, pos) = PtpIpDataObject.ParseArray('Uint16', data, pos)
-        (self.manufacturer, pos) = PtpIpDataObject.ParseString(data, pos)
-        (self.model, pos) = PtpIpDataObject.ParseString(data, pos)
-        (self.deviceVersion, pos) = PtpIpDataObject.ParseString(data, pos)
-        (self.serialNumber, pos) = PtpIpDataObject.ParseString(data, pos)
+        (self.standardVersion, pos) = DataObject.ParseUint16(data, 0)
+        (self.vendorExtensionId, pos) = DataObject.ParseUint32(data, pos)
+        (self.vendorExtensionVersion, pos) = DataObject.ParseUint16(data, pos)
+        (self.vendorExtensionDesc, pos) = DataObject.ParseString(data, pos)
+        (self.functionalMode, pos) = DataObject.ParseUint16(data, pos)
+        (self.operationsSupported, pos) = DataObject.ParseArray('Uint16', data, pos)
+        (self.eventsSupported, pos) = DataObject.ParseArray('Uint16', data, pos)
+        (self.devicePropertiesSupported, pos) = DataObject.ParseArray('Uint16', data, pos)
+        (self.captureFormats, pos) = DataObject.ParseArray('Uint16', data, pos)
+        (self.imageFormats, pos) = DataObject.ParseArray('Uint16', data, pos)
+        (self.manufacturer, pos) = DataObject.ParseString(data, pos)
+        (self.model, pos) = DataObject.ParseString(data, pos)
+        (self.deviceVersion, pos) = DataObject.ParseString(data, pos)
+        (self.serialNumber, pos) = DataObject.ParseString(data, pos)
 
     def __str__(self):
-
-        print(str(12288 in ObjectFormat._value2member_map_))
-        print(str(0x3000 in ObjectFormat._value2member_map_))
         sOperationsSupported = "[\n"
         for i in range(0, len(self.operationsSupported)):
             sOp = CmdType(self.operationsSupported[i]).name \
