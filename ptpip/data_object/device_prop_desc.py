@@ -1,3 +1,11 @@
+from ptpip.exposure_index import ExposureIndex
+from ptpip.exposure_program_mode import ExposureProgramMode
+from ptpip.exposure_time import ExposureTime
+from ptpip.flash_mode import FlashMode
+from ptpip.focus_mode import FocusMode
+from ptpip.still_capture_mode import StillCaptureMode
+from ptpip.white_balance import WhiteBalance
+
 from ptpip.data_object import DataObject
 from ptpip.device_property_type import DevicePropertyType
 from ptpip.property_type import PropertyType
@@ -52,14 +60,58 @@ class DevicePropDesc():
                 (self.values, pos) = DataObject.ParseArray(self.prop_type.name, data, pos, 'Uint16')
         except Exception as e:
             print(str(e))
+
+    def propertyValueStr(self, value):
+        if self.type == DevicePropertyType.ExposureIndex \
+            and value in ExposureIndex._value2member_map_ \
+            :
+                return ExposureIndex(value).name
+
+        if self.type == DevicePropertyType.ExposureProgramMode \
+            and value in ExposureProgramMode._value2member_map_ \
+            :
+                return ExposureProgramMode(value).name
+
+        if self.type == DevicePropertyType.ExposureTime \
+            and value in ExposureTime._value2member_map_ \
+            :
+                return ExposureTime(value).name
+
+        if self.type == DevicePropertyType.FlashMode \
+            and value in FlashMode._value2member_map_ \
+            :
+                return FlashMode(value).name
+
+        if self.type == DevicePropertyType.FocusMode \
+            and value in FocusMode._value2member_map_ \
+            :
+                return FocusMode(value).name
+
+        if self.type == DevicePropertyType.StillCaptureMode \
+            and value in StillCaptureMode._value2member_map_ \
+            :
+                return StillCaptureMode(value).name
+
+        if self.type == DevicePropertyType.WhiteBalance \
+            and value in WhiteBalance._value2member_map_ \
+            :
+                return WhiteBalance(value).name
+
+        return str(value)
+
+
     def __str__(self):
         sMutation = ''
         if self.mutation == PropertyTypeMutation.Range:
-            sMutation = "\t" + 'min_value: ' + str(self.min_value) + "\n" \
-                + "\t" + 'max_value: ' + str(self.min_value) + "\n" \
+            sMutation = "\t" + 'min_value: ' + self.propertyValueStr(self.min_value) + "\n" \
+                + "\t" + 'max_value: ' + self.propertyValueStr(self.min_value) + "\n" \
                 + "\t" + 'step: ' + str(self.step) + "\n"
         elif self.mutation == PropertyTypeMutation.Enumeration:
-            sMutation = "\t" + 'values: ' + str(self.values) + "\n"
+            sValues = []
+            for value in self.values:
+                sValues.append(self.propertyValueStr(value))
+
+            sMutation = "\t" + 'values: ' + str(sValues) + "\n"
 
         return 'DevicePropDesc: ' + "\n" \
             + "\t" + 'type_id: ' + str(self.type_id) + "\n" \
@@ -67,7 +119,7 @@ class DevicePropDesc():
             + "\t" + 'prop_type_id: ' + str(self.prop_type_id) + "\n" \
             + "\t" + 'prop_type: ' + str(self.prop_type) + "\n" \
             + "\t" + 'mode: ' + str(self.mode.name) + "\n" \
-            + "\t" + 'default_value: ' + str(self.default_value) + "\n" \
-            + "\t" + 'value: ' + str(self.value) + "\n" \
+            + "\t" + 'default_value: ' + self.propertyValueStr(self.default_value) + "\n" \
+            + "\t" + 'value: ' + self.propertyValueStr(self.value) + "\n" \
             + "\t" + 'mutation: ' + str(self.mutation) + "\n" \
             + sMutation

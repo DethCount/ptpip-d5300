@@ -1,18 +1,18 @@
 import struct
 
-from .packet import PtpIpPacket
+from .packet import Packet
 
-class PtpIpPing(PtpIpPacket):
+class Ping(Packet):
     """docstring for Start_Data_Packet"""
     def __init__(self, data=None):
         self.cmdtype = struct.pack('I', 0x13)
-        super(PtpIpPing, self).__init__()
+        super(Ping, self).__init__()
         self.data = data
 
     def data(self):
         return self.cmdtype
 
     def __str__(self):
-        return 'PtpIpPing: ' + "\n" \
+        return 'Ping: ' + "\n" \
             + "\t" + 'cmdtype: ' + str(self.cmdtype) + "\n" \
             + "\t" + 'data: ' + str(self.data) + "\n"

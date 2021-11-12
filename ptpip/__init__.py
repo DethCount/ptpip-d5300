@@ -4,7 +4,7 @@ import ptpip.packet
 
 from .association_type import AssociationType
 from .cmd_type import CmdType
-from .connection import PtpIpConnection
+from .connection import Connection
 from .device_property_type import DevicePropertyType
 from .event_type import EventType
 from .functional_mode import FunctionalMode

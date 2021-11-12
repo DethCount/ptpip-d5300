@@ -1,21 +1,21 @@
-from .packet import PtpIpPacket
+from .packet import Packet
 
-from .cancel_transaction import PtpIpCancelTransaction
+from .cancel_transaction import CancelTransaction
 
-from .cmd_request import PtpIpCmdRequest
-from .cmd_response import PtpIpCmdResponse
+from .cmd_request import CmdRequest
+from .cmd_response import CmdResponse
 
-from .start_data import PtpIpStartDataPacket
-from .data import PtpIpDataPacket
-from .end_data import PtpIpEndDataPacket
+from .start_data import StartDataPacket
+from .data import DataPacket
+from .end_data import EndDataPacket
 
-from .event_ack import PtpIpEventAck
-from .event_req import PtpIpEventReq
+from .event_ack import EventAck
+from .event_req import EventReq
 
-from .init_cmd_ack import PtpIpInitCmdAck
-from .init_cmd_req import PtpIpInitCmdReq
-from .init_fail import PtpIpInitFail
+from .init_cmd_ack import InitCmdAck
+from .init_cmd_req import InitCmdReq
+from .init_fail import InitFail
 
-from .ping import PtpIpPing
+from .ping import Ping
 
-from .factory import PtpIpPacketFactory
+from .factory import PacketFactory

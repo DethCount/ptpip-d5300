@@ -1,13 +1,13 @@
 import struct
 
-from .packet import PtpIpPacket
+from .packet import Packet
 
-class PtpIpInitFail(PtpIpPacket):
-    """docstring for PtpIpInitCmd"""
+class InitFail(Packet):
+    """docstring for InitCmd"""
     def __init__(self, data=None):
-        super(PtpIpInitFail, self).__init__()
+        super(InitFail, self).__init__()
         self.cmdtype = struct.pack('I', 0x05)
 
     def __str__(self):
-        return 'PtpIpInitFail: ' + "\n" \
+        return 'InitFail: ' + "\n" \
             + "\t" + 'cmdtype: ' + str(self.cmdtype) + "\n"

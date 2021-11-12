@@ -1,9 +1,9 @@
 import struct
 
 from ptpip.cmd_type import CmdType
-from ptpip.packet import PtpIpPacket
+from ptpip.packet import Packet
 
-class PtpIpCmdRequest(PtpIpPacket):
+class CmdRequest(Packet):
     def __init__(
         self,
         transaction_id=None,
@@ -15,7 +15,7 @@ class PtpIpCmdRequest(PtpIpPacket):
         param4=None,
         param5=None
     ):
-        super(PtpIpCmdRequest, self).__init__()
+        super(CmdRequest, self).__init__()
         self.cmdtype = struct.pack('I', 0x06)
         self.unkown = struct.pack('I', 0x01)
         self.ptp_cmd = cmd
@@ -50,7 +50,7 @@ class PtpIpCmdRequest(PtpIpPacket):
             + self.args
 
     def __str__(self):
-        return 'PtpIpCmdRequest: ' + "\n" \
+        return 'CmdRequest: ' + "\n" \
             + "\t" + 'cmdtype: ' + str(self.cmdtype) + "\n" \
             + "\t" + 'unknown: ' + str(self.unkown) + "\n" \
             + "\t" + 'ptp_cmd: ' + str(self.ptp_cmd) + "\n" \

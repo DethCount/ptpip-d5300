@@ -1,15 +1,15 @@
 import struct
 
-from ptpip.event.event import PtpIpEvent
+from ptpip.event.event import Event
 
-class PtpIpEventFactory(object):
+class EventFactory(object):
     """
-    This is a factory to produce an array of PtpIpEvent objects if it got passd a data reply
+    This is a factory to produce an array of Event objects if it got passd a data reply
     from a GetEvent request 0x90C7
     """
     def __init__(self, data):
-        super(PtpIpEventFactory, self).__init__()
-        # create an empty array for the PtpIpEvent object which will be replied
+        super(EventFactory, self).__init__()
+        # create an empty array for the Event object which will be replied
         self.events = []
 
         # get the amount of events passed from the data passed to the factory
@@ -24,7 +24,7 @@ class PtpIpEventFactory(object):
 
             # get the event_parameter which consists of 4 bytes
             event_parameter = str(struct.unpack('I', data[offset+2:offset+6])[0])
-            self.events.append(PtpIpEvent(event_type, event_parameter))
+            self.events.append(Event(event_type, event_parameter))
 
             # increase the offset by 6 to get to the next event_type and event_parameter pair
             offset = offset + 6

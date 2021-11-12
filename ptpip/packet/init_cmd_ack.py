@@ -1,11 +1,11 @@
 import struct
 
-from .packet import PtpIpPacket
+from .packet import Packet
 
-class PtpIpInitCmdAck(PtpIpPacket):
-    """docstring for PtpIpInitCmd"""
+class InitCmdAck(Packet):
+    """docstring for InitCmd"""
     def __init__(self, data=None):
-        super(PtpIpInitCmdAck, self).__init__()
+        super(InitCmdAck, self).__init__()
         self.cmdtype = struct.pack('I', 0x02)
         if data is not None:
             self.session_id = data[0:4]
@@ -13,7 +13,7 @@ class PtpIpInitCmdAck(PtpIpPacket):
             self.hostname = data[20:]
 
     def __str__(self):
-        return 'PtpIpInitCmdAck: ' + "\n" \
+        return 'InitCmdAck: ' + "\n" \
             + "\t" + 'cmdtype: ' + str(self.cmdtype) + "\n" \
             + "\t" + 'session_id: ' + str(self.session_id) + "\n" \
             + "\t" + 'guid: ' + str(self.guid) + "\n" \

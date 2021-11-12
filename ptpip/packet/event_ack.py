@@ -1,13 +1,13 @@
 import struct
 
-from .packet import PtpIpPacket
+from .packet import Packet
 
-class PtpIpEventAck(PtpIpPacket):
-    """docstring for PtpIpInitCmd"""
+class EventAck(Packet):
+    """docstring for InitCmd"""
     def __init__(self, data=None):
-        super(PtpIpEventAck, self).__init__()
+        super(EventAck, self).__init__()
         self.cmdtype = struct.pack('I', 0x04)
 
     def __str__(self):
-        return 'PtpIpEventAck: ' + "\n" \
+        return 'EventAck: ' + "\n" \
             + "\t" + 'cmdtype: ' + str(self.cmdtype) + "\n"

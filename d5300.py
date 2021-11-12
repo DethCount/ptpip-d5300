@@ -6,15 +6,17 @@ import time
 
 from ptpip.cmd_type import CmdType
 from ptpip.event_type import EventType
-from ptpip.connection import PtpIpConnection
-from ptpip.packet.cmd_request import PtpIpCmdRequest
+from ptpip.device_property_type import DevicePropertyType
+from ptpip.exposure_time import ExposureTime
+from ptpip.connection import Connection
+from ptpip.packet.cmd_request import CmdRequest
 
 from PIL import Image
 from threading import Thread, get_ident
 
 
 def setup():
-    conn = PtpIpConnection()
+    conn = Connection()
 
     conn.open()
 
@@ -38,16 +40,36 @@ async def loop(conn):
     # thread_obj.start()
 
     # create a PTP/IP command request device info and add it to the queue of the PTP/IP connection object
-    # ptpip_cmd = PtpIpCmdRequest(transaction_id=1, cmd=CmdType.GetDeviceInfo.value)
+    # ptpip_cmd = CmdRequest(transaction_id=1, cmd=CmdType.GetDeviceInfo.value)
     # ptpip_packet = conn.send_ptpip_cmd(ptpip_cmd)
 
     device = await conn.get_device_info()
     # print('Device: ' + str(device))
 
     for idx, prop in enumerate(device.devicePropertiesSupported):
-        prop_desc = await conn.get_device_prop_desc(prop=prop, transaction_id=0x100 & idx)
+        prop_desc = await conn.get_device_prop_desc(
+            prop=prop,
+            transaction_id=0x100 | idx
+        )
         # print('Prop desc(' + str(idx) + '):' + "\n" + str(prop_desc))
 
+    picture_control_capabilities = await conn.get_picture_control_capabilities(
+        transaction_id = 0xFFF
+    )
+
+    """
+    conn.set_device_prop_desc(
+        prop=DevicePropertyType.ExposureIndex.value,
+        value="1600",
+        transaction_id=0x1000 | idx
+    )
+
+    conn.set_device_prop_desc(
+        prop=DevicePropertyType.ExposureTime.value,
+        value=ExposureTime.OneOver4000.value,
+        transaction_id=0x1000 | idx
+    )
+    """
 
 event_loop = asyncio.get_event_loop()
 
@@ -60,7 +82,7 @@ except KeyboardInterrupt:
 
 """
 # create a PTP/IP command request object and add it to the queue of the PTP/IP connection object
-ptpip_cmd = PtpIpCmdRequest(
+ptpip_cmd = CmdRequest(
     transaction_id=2,
     cmd=CmdType.InitiateCaptureRecInMedia.value,
     param1=0xffffffff,
@@ -72,7 +94,7 @@ ptpip_packet = conn.send_ptpip_cmd(ptpip_cmd)
 time.sleep(5)
 
 # get the events from the camera, they will be stored in the event_queue of the ptpip object
-ptpip_cmd = PtpIpCmdRequest(
+ptpip_cmd = CmdRequest(
     transaction_id=3,
     cmd=CmdType.GetEvent.value
 )
@@ -85,7 +107,7 @@ time.sleep(2)
 # for a image captured
 for event in conn.event_queue:
     if event.event_type == EventType.ObjectAdded.value:
-        ptpip_cmd = PtpIpCmdRequest(
+        ptpip_cmd = CmdRequest(
             transaction_id=4,
             cmd=CmdType.GetObject.value,
             param1=event.event_parameter

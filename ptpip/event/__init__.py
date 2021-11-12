@@ -1,2 +1,2 @@
-from .event import PtpIpEvent
-from .factory import PtpIpEventFactory
+from .event import Event
+from .factory import EventFactory

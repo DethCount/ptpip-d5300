@@ -1,18 +1,18 @@
 import struct
 
-from .init_cmd_req import PtpIpInitCmdReq
-from .init_cmd_ack import PtpIpInitCmdAck
-from .event_req import PtpIpEventReq
-from .event_ack import PtpIpEventAck
-from .init_fail import PtpIpInitFail
-from .cmd_request import PtpIpCmdRequest
-from .cmd_response import PtpIpCmdResponse
-from .start_data import PtpIpStartDataPacket
-from .data import PtpIpDataPacket
-from .end_data import PtpIpEndDataPacket
-from .ping import PtpIpPing
+from .init_cmd_req import InitCmdReq
+from .init_cmd_ack import InitCmdAck
+from .event_req import EventReq
+from .event_ack import EventAck
+from .init_fail import InitFail
+from .cmd_request import CmdRequest
+from .cmd_response import CmdResponse
+from .start_data import StartDataPacket
+from .data import DataPacket
+from .end_data import EndDataPacket
+from .ping import Ping
 
-class PtpIpPacketFactory(object):
+class PacketFactory(object):
 
     def createPacket(data = None):
         if data is None:
@@ -22,37 +22,37 @@ class PtpIpPacketFactory(object):
 
         if cmdtype == 1:
             print("InitCmdReq")
-            return PtpIpInitCmdReq(data[4:])
+            return InitCmdReq(data[4:])
         elif cmdtype == 2:
             print("InitCmdAck")
-            return PtpIpInitCmdAck(data[4:])
+            return InitCmdAck(data[4:])
         elif cmdtype == 3:
             print("EventReq")
-            return PtpIpEventReq(data[4:])
+            return EventReq(data[4:])
         elif cmdtype == 4:
             print("EventAck")
-            return PtpIpEventAck(data[4:])
+            return EventAck(data[4:])
         elif cmdtype == 5:
             print("InitFail")
-            return PtpIpInitFail(data[4:])
+            return InitFail(data[4:])
         elif cmdtype == 6:
             print("CmdRequest")
-            return PtpIpCmdRequest(data[4:])
+            return CmdRequest(data[4:])
         elif cmdtype == 7:
             print("CmdResponse")
-            return PtpIpCmdResponse(data[4:])
+            return CmdResponse(data[4:])
         elif cmdtype == 9:
             print("StartDataPacket")
-            return PtpIpStartDataPacket(data[4:])
+            return StartDataPacket(data[4:])
         elif cmdtype == 10:
             print("DataPacket")
-            return PtpIpDataPacket(data[4:])
+            return DataPacket(data[4:])
         elif cmdtype == 12:
             print("EndDataPacket")
-            return PtpIpEndDataPacket(data[4:])
+            return EndDataPacket(data[4:])
         elif cmdtype == 13:
             print("Ping")
-            return PtpIpPing(data[4:])
+            return Ping(data[4:])
         elif cmdtype == 14:
             print("GetDeviceInfo")
         else:

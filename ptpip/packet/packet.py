@@ -1,9 +1,9 @@
 import struct
 
-class PtpIpPacket(object):
-    """docstring for PtpIpPacket"""
+class Packet(object):
+    """docstring for Packet"""
     def __init__(self):
-        super(PtpIpPacket, self).__init__()
+        super(Packet, self).__init__()
 
     def data(self):
         pass

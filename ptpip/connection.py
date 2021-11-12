@@ -6,23 +6,23 @@ import time
 from ptpip.cmd_type import CmdType
 from ptpip.data_object.data_object import DataObject
 from ptpip.data_object.device_prop_desc import DevicePropDesc
-from ptpip.event.factory import PtpIpEventFactory
-from ptpip.packet.factory import PtpIpPacketFactory
-from ptpip.packet.cmd_request import PtpIpCmdRequest
-from ptpip.packet.cmd_response import PtpIpCmdResponse
-from ptpip.packet.start_data import PtpIpStartDataPacket
-from ptpip.packet.data import PtpIpDataPacket
-from ptpip.packet.init_cmd_ack import PtpIpInitCmdAck
-from ptpip.packet.init_cmd_req import PtpIpInitCmdReq
-from ptpip.packet.event_req import PtpIpEventReq
+from ptpip.event.factory import EventFactory
+from ptpip.packet.factory import PacketFactory
+from ptpip.packet.cmd_request import CmdRequest
+from ptpip.packet.cmd_response import CmdResponse
+from ptpip.packet.start_data import StartDataPacket
+from ptpip.packet.data import DataPacket
+from ptpip.packet.init_cmd_ack import InitCmdAck
+from ptpip.packet.init_cmd_req import InitCmdReq
+from ptpip.packet.event_req import EventReq
 
 from ptpip.data_object.device_info import DeviceInfo
 
-class PtpIpConnection(object):
+class Connection(object):
 
     """docstring for PtpIP"""
     def __init__(self):
-        super(PtpIpConnection, self).__init__()
+        super(Connection, self).__init__()
         self.session = None
         self.session_events = None
         self.session_id = None
@@ -38,12 +38,12 @@ class PtpIpConnection(object):
     ):
         # Open both session, first one for for commands, second for events
         self.session = self.connect(host=host, port=port)
-        self.send_receive_ptpip_packet(PtpIpInitCmdReq(), self.session)
+        self.send_receive_ptpip_packet(InitCmdReq(), self.session)
         self.session_events = self.connect(host=host, port=port)
-        self.send_receive_ptpip_packet(PtpIpEventReq(), self.session_events)
+        self.send_receive_ptpip_packet(EventReq(), self.session_events)
 
         print("session_id: " + str(struct.unpack('I', self.session_id)[0]))
-        ptpip_cmd = PtpIpCmdRequest(
+        ptpip_cmd = CmdRequest(
             transaction_id=transaction_id,
             cmd=CmdType.OpenSession.value,
             param1=struct.unpack('I', self.session_id)[0]
@@ -56,11 +56,11 @@ class PtpIpConnection(object):
             print('Comm while')
             if len(self.cmd_queue) == 0:
                 # do a ping receive a pong (same as ping) as reply to keep the connection alive
-                # couldnt get any reply onto a propper PtpIpPing packet so i am querying the status
+                # couldnt get any reply onto a propper Ping packet so i am querying the status
                 # of the device
                 print("CCC Ping...")
                 ptpip_packet_reply = self.send_receive_ptpip_packet(
-                    PtpIpCmdRequest(
+                    CmdRequest(
                         transaction_id=6,
                         cmd=CmdType.DeviceReady.value
                     ),
@@ -139,20 +139,22 @@ class PtpIpConnection(object):
 
     async def get_device_info(self, delay=1, transaction_id=1):
         print('get_device_info')
-        ptpip_cmd = PtpIpCmdRequest(
+        ptpip_cmd = CmdRequest(
             transaction_id=transaction_id,
             cmd=CmdType.GetDeviceInfo.value
         )
         self.send_ptpip_cmd(ptpip_cmd)
 
         async for obj_data in self.listen_object_data_queue(delay = delay):
-            if isinstance(obj_data, DeviceInfo):
+            if isinstance(obj_data, DeviceInfo) \
+                and struct.unpack('I', obj_data.packet.transaction_id)[0] == transaction_id \
+            :
                 self.object_queue.remove(obj_data)
                 return obj_data
 
     async def get_device_prop_desc(self, prop, delay=1, transaction_id=1):
         print('get_device_prop_desc')
-        ptpip_cmd = PtpIpCmdRequest(
+        ptpip_cmd = CmdRequest(
             transaction_id=transaction_id,
             cmd=CmdType.GetDevicePropDesc.value,
             param1=prop
@@ -166,64 +168,87 @@ class PtpIpConnection(object):
                 self.object_queue.remove(obj_data)
                 return obj_data
 
+    async def get_picture_control_capabilities(self, delay=1, transaction_id=1):
+        print('get_picture_control_capabilities')
+        ptpip_cmd = CmdRequest(
+            transaction_id=transaction_id,
+            # cmd=CmdType.GetPicCtrlCapability.value
+            cmd=CmdType.GetPicCtrlData.value
+        )
+        self.send_ptpip_cmd(ptpip_cmd)
+
+        async for obj_data in self.listen_object_data_queue(delay = delay):
+            if isinstance(obj_data, DataObject) \
+                and struct.unpack('I', obj_data.packet.transaction_id)[0] == transaction_id \
+            :
+                self.object_queue.remove(obj_data)
+                return obj_data
+
     def send_receive_ptpip_packet(self, ptpip_packet, session):
-        if isinstance(ptpip_packet, PtpIpInitCmdReq):
+        if isinstance(ptpip_packet, InitCmdReq):
             self.send_packet(ptpip_packet, session)
             ptpip_packet_reply = self.get_response_packet(session)
 
-            # set the session id of the object if the reply is of type PtpIpInitCmdAck
-            if isinstance(ptpip_packet_reply, PtpIpInitCmdAck):
+            # set the session id of the object if the reply is of type InitCmdAck
+            if isinstance(ptpip_packet_reply, InitCmdAck):
                 self.session_id = ptpip_packet_reply.session_id
 
-        elif isinstance(ptpip_packet, PtpIpEventReq):
+        elif isinstance(ptpip_packet, EventReq):
             self.send_ptpip_event_req(ptpip_packet, session)
 
             ptpip_packet_reply = self.get_response_packet(session)
 
-        elif isinstance(ptpip_packet, PtpIpCmdRequest) \
-            and ptpip_packet.ptp_cmd == CmdType.GetEvent.value:
+        elif isinstance(ptpip_packet, CmdRequest) \
+            and ptpip_packet.ptp_cmd == CmdType.GetEvent.value \
+        :
             self.send_packet(ptpip_packet, session)
             ptpip_packet_reply = self.get_response_packet(session)
 
             # download object data
-            if isinstance(ptpip_packet_reply, PtpIpStartDataPacket):
+            if isinstance(ptpip_packet_reply, StartDataPacket):
                 data_length = struct.unpack('I', ptpip_packet_reply.length)[0]
 
                 ptpip_packet_reply = self.get_response_packet(session)
                 data = ptpip_packet_reply.data
-                while isinstance(ptpip_packet_reply, PtpIpDataPacket):
+                while isinstance(ptpip_packet_reply, DataPacket):
                     data = data + ptpip_packet_reply.data
                     ptpip_packet_reply = self.get_response_packet(session)
 
-            if data_length == len(data):
-                events = PtpIpEventFactory(data).get_events()
-                for event in events:
-                    self.event_queue.append(event)
+                if data_length == len(data):
+                    events = EventFactory(data).get_events()
+                    for event in events:
+                        self.event_queue.append(event)
 
             ptpip_packet_reply = self.get_response_packet(session)
 
-        elif isinstance(ptpip_packet, PtpIpCmdRequest) \
+        elif isinstance(ptpip_packet, CmdRequest) \
             and (
                 ptpip_packet.ptp_cmd == CmdType.GetObject.value
                 or ptpip_packet.ptp_cmd == CmdType.GetDeviceInfo.value
                 or ptpip_packet.ptp_cmd == CmdType.GetDevicePropDesc.value
+                or ptpip_packet.ptp_cmd == CmdType.GetPicCtrlCapability.value
+                or ptpip_packet.ptp_cmd == CmdType.GetPicCtrlData.value
             ):
             self.send_packet(ptpip_packet, session)
             ptpip_packet_reply = self.get_response_packet(session)
 
-            if isinstance(ptpip_packet_reply, PtpIpStartDataPacket):
+            data_length = 0
+            if isinstance(ptpip_packet_reply, StartDataPacket):
                 data_length = struct.unpack('I', ptpip_packet_reply.length)[0]
 
                 ptpip_packet_reply = self.get_response_packet(session)
                 data = ptpip_packet_reply.data
-                while isinstance(ptpip_packet_reply, PtpIpDataPacket):
+                while isinstance(ptpip_packet_reply, DataPacket):
                     data = data + ptpip_packet_reply.data
                     ptpip_packet_reply = self.get_response_packet(session)
 
-            if data_length == len(data):
-                self.queue_object(DataObject(ptpip_packet, data))
+                if data_length == len(data):
+                    self.queue_object(DataObject(ptpip_packet, data))
 
-            ptpip_packet_reply = self.get_response_packet(session)
+                ptpip_packet_reply = self.get_response_packet(session)
+            else:
+                print(str(type(ptpip_packet_reply)))
+                print(str(ptpip_packet_reply))
 
         else:
             self.send_packet(ptpip_packet, session)
@@ -255,7 +280,7 @@ class PtpIpConnection(object):
         return data[4:]
 
     def get_response_packet(self, session):
-        response = PtpIpPacketFactory.createPacket(data=self.receive_data(session))
+        response = PacketFactory.createPacket(data=self.receive_data(session))
         print('---- RECV ----')
         print('CmdType: ' + str(struct.unpack('I', response.cmdtype)[0]))
         return response

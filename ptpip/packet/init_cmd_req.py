@@ -2,12 +2,12 @@ import socket
 import struct
 import uuid
 
-from .packet import PtpIpPacket
+from .packet import Packet
 
-class PtpIpInitCmdReq(PtpIpPacket):
-    """docstring for PtpIpInitCmd"""
+class InitCmdReq(Packet):
+    """docstring for InitCmd"""
     def __init__(self, data=None):
-        super(PtpIpInitCmdReq, self).__init__()
+        super(InitCmdReq, self).__init__()
         self.cmdtype = struct.pack('I', 0x01)
         if data is None:
             guid = uuid.uuid4()
@@ -22,7 +22,7 @@ class PtpIpInitCmdReq(PtpIpPacket):
         return self.cmdtype + self.guid + self.hostname
 
     def __str__(self):
-        return 'PtpIpInitCmdReq: ' + "\n" \
+        return 'InitCmdReq: ' + "\n" \
             + "\t" + 'cmdtype: ' + str(self.cmdtype) + "\n" \
             + "\t" + 'guid: ' + str(self.guid) + "\n" \
             + "\t" + 'hostname: ' + str(self.hostname) + "\n"
