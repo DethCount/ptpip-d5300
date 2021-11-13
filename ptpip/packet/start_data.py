@@ -4,9 +4,12 @@ from .packet import Packet
 
 class StartDataPacket(Packet):
     """docstring for Start_Data_Packet"""
-    def __init__(self, data=None):
-        self.cmdtype = struct.pack('I', 0x09)
+    def __init__(self, data=None, request: Packet = None):
         super(StartDataPacket, self).__init__()
+
+        self.cmdtype = struct.pack('I', 0x09)
+        self.request = request
+
         if data is not None:
             self.transaction_id = data[0:4]
             self.length = data[4:8]

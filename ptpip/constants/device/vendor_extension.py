@@ -1,6 +1,7 @@
 from enum import Enum
 
 class VendorExtension(Enum):
+    Undefined               = 0x00000000
     EastmanKodak            = 0x00000001
     SeikoEpson              = 0x00000002
     Agilent                 = 0x00000003

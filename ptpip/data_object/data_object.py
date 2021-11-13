@@ -38,7 +38,11 @@ class DataObject(object):
 
     def ParseInt64(data, pos):
         pos2 = pos + 8
-        return (struct.unpack('i', data[pos:pos2])[0], pos2)
+        return (struct.unpack('q', data[pos:pos2])[0], pos2)
+
+    def ParseUint64(data, pos):
+        pos2 = pos + 8
+        return (struct.unpack('Q', data[pos:pos2])[0], pos2)
 
     def ParseString(data, pos):
         (length, pos) = DataObject.ParseUint8(data, pos)
@@ -46,6 +50,9 @@ class DataObject(object):
         s = ''
         for i in range(0, length):
             (c, pos) = DataObject.ParseUint16(data, pos)
+            if c == 0:
+                break
+
             s += chr(c)
 
         return (s, pos)
@@ -104,6 +111,11 @@ class DataObject(object):
         if typeName == 'Uint32':
             return DataObject.ParseUint32(data, pos)
 
+        if typeName == 'Int64':
+            return DataObject.ParseInt64(data, pos)
+        if typeName == 'Uint64':
+            return DataObject.ParseUint64(data, pos)
+
         if typeName == 'String':
             return DataObject.ParseString(data, pos)
 
@@ -121,3 +133,8 @@ class DataObject(object):
             return DataObject.ParseInt32Array(data, pos)
         if typeName == 'Uint32Array':
             return DataObject.ParseUint32Array(data, pos)
+
+        if typeName == 'Int64Array':
+            return DataObject.ParseInt64Array(data, pos)
+        if typeName == 'Uint64Array':
+            return DataObject.ParseUint64Array(data, pos)

@@ -1,5 +1,5 @@
 from enum import Enum
 
 class FunctionalMode(Enum):
-	Normal 	 = 0
-	Sleeping = 1
+    Normal      = 0x00
+    Sleeping    = 0x01

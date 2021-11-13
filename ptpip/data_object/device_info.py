@@ -1,9 +1,10 @@
-from ptpip.cmd_type import CmdType
-from ptpip.event_type import EventType
-from ptpip.device_property_type import DevicePropertyType
-from ptpip.functional_mode import FunctionalMode
-from ptpip.object_format import ObjectFormat
-from ptpip.vendor_extension import VendorExtension
+from ptpip.constants.cmd_type import CmdType
+from ptpip.constants.event_type import EventType
+from ptpip.constants.object_format import ObjectFormat
+
+from ptpip.constants.device.property_type import DevicePropertyType
+from ptpip.constants.device.functional_mode import FunctionalMode
+from ptpip.constants.device.vendor_extension import VendorExtension
 
 from .data_object import DataObject
 
@@ -17,9 +18,9 @@ class DeviceInfo(object):
         (self.vendorExtensionVersion, pos) = DataObject.ParseUint16(data, pos)
         (self.vendorExtensionDesc, pos) = DataObject.ParseString(data, pos)
         (self.functionalMode, pos) = DataObject.ParseUint16(data, pos)
-        (self.operationsSupported, pos) = DataObject.ParseArray('Uint16', data, pos)
-        (self.eventsSupported, pos) = DataObject.ParseArray('Uint16', data, pos)
-        (self.devicePropertiesSupported, pos) = DataObject.ParseArray('Uint16', data, pos)
+        (self.operations, pos) = DataObject.ParseArray('Uint16', data, pos)
+        (self.events, pos) = DataObject.ParseArray('Uint16', data, pos)
+        (self.properties, pos) = DataObject.ParseArray('Uint16', data, pos)
         (self.captureFormats, pos) = DataObject.ParseArray('Uint16', data, pos)
         (self.imageFormats, pos) = DataObject.ParseArray('Uint16', data, pos)
         (self.manufacturer, pos) = DataObject.ParseString(data, pos)
@@ -27,69 +28,70 @@ class DeviceInfo(object):
         (self.deviceVersion, pos) = DataObject.ParseString(data, pos)
         (self.serialNumber, pos) = DataObject.ParseString(data, pos)
 
+    def vendorExtensionIdStr(self):
+        return VendorExtension(self.vendorExtensionId).name \
+            if self.vendorExtensionId in VendorExtension._value2member_map_ \
+            else str(self.vendorExtensionId)
+
+    def functionalModeStr(self):
+        return FunctionalMode(self.functionalMode).name \
+            if self.functionalMode in FunctionalMode._value2member_map_ \
+            else str(self.functionalMode)
+
+    def operationStr(self, operation):
+        return CmdType(operation).name \
+            if operation in CmdType._value2member_map_ \
+            else str(operation)
+
+    def eventStr(self, event):
+        return EventType(event).name \
+            if event in EventType._value2member_map_ \
+            else str(event)
+
+    def objectFormatStr(self, objectFormat):
+        return ObjectFormat(objectFormat).name \
+            if objectFormat in ObjectFormat._value2member_map_ \
+            else str(objectFormat)
+
     def __str__(self):
-        sOperationsSupported = "[\n"
-        for i in range(0, len(self.operationsSupported)):
-            sOp = CmdType(self.operationsSupported[i]).name \
-                if self.operationsSupported[i] in CmdType._value2member_map_ \
-                else str(self.operationsSupported[i])
+        sOps = "[\n"
+        for i in range(0, len(self.operations)):
+            sOps += "\t" + self.operationStr(self.operations[i]) + ",\n"
+        sOps += "]"
 
-            sOperationsSupported += "\t" + sOp + ",\n"
-        sOperationsSupported += "]"
+        sEvents = "[\n"
+        for i in range(0, len(self.events)):
+            sEvents += "\t" + self.eventStr(self.events[i]) + ",\n"
+        sEvents += "]"
 
-        sEventsSupported = "[\n"
-        for i in range(0, len(self.eventsSupported)):
-            sEvt = EventType(self.eventsSupported[i]).name \
-                if self.eventsSupported[i] in EventType._value2member_map_ \
-                else str(self.eventsSupported[i])
+        sProps = "[\n"
+        for i in range(0, len(self.properties)):
+            sProp = DevicePropertyType(self.properties[i]).name \
+                if self.properties[i] in DevicePropertyType._value2member_map_ \
+                else str(self.properties[i])
 
-            sEventsSupported += "\t" + sEvt + ",\n"
-        sEventsSupported += "]"
-
-        sDevicePropertiesSupported = "[\n"
-        for i in range(0, len(self.devicePropertiesSupported)):
-            sProp = DevicePropertyType(self.devicePropertiesSupported[i]).name \
-                if self.devicePropertiesSupported[i] in DevicePropertyType._value2member_map_ \
-                else str(self.devicePropertiesSupported[i])
-
-            sDevicePropertiesSupported += "\t" + sProp + ",\n"
-        sDevicePropertiesSupported += "]"
+            sProps += "\t" + sProp + ",\n"
+        sProps += "]"
 
         sCaptureFormats = "[\n"
         for i in range(0, len(self.captureFormats)):
-            sCap = ObjectFormat(self.captureFormats[i]).name \
-                if self.captureFormats[i] in ObjectFormat._value2member_map_ \
-                else str(self.captureFormats[i])
-
-            sCaptureFormats += "\t" + sCap + ",\n"
+            sCaptureFormats += "\t" + self.objectFormatStr(self.captureFormats[i]) + ",\n"
         sCaptureFormats += "]"
 
         sImageFormats = "[\n"
         for i in range(0, len(self.imageFormats)):
-            sImg = ObjectFormat(self.imageFormats[i]).name \
-                if self.imageFormats[i] in ObjectFormat._value2member_map_ \
-                else str(self.imageFormats[i])
-
-            sImageFormats += "\t" + sImg + ",\n"
+            sImageFormats += "\t" + self.objectFormatStr(self.imageFormats[i]) + ",\n"
         sImageFormats += "]"
-
-        sVendorExtensionId = VendorExtension(self.vendorExtensionId).name \
-            if self.vendorExtensionId in VendorExtension._value2member_map_ \
-            else str(self.vendorExtensionId)
-
-        sFunctionalMode = FunctionalMode(self.functionalMode).name \
-            if self.functionalMode in FunctionalMode._value2member_map_ \
-            else str(self.functionalMode)
 
         return '---- DeviceInfo ----' + "\n" \
             + 'standardVersion: ' + str(self.standardVersion) + "\n" \
-            + 'vendorExtensionId: ' + sVendorExtensionId + "\n" \
+            + 'vendorExtensionId: ' + self.vendorExtensionIdStr() + "\n" \
             + 'vendorExtensionVersion: ' + str(self.vendorExtensionVersion) + "\n" \
             + 'vendorExtensionDesc: ' + str(self.vendorExtensionDesc) + "\n" \
-            + 'functionalMode: ' + sFunctionalMode + "\n" \
-            + 'operationsSupported: ' + sOperationsSupported + "\n" \
-            + 'eventsSupported: ' + sEventsSupported + "\n" \
-            + 'devicePropertiesSupported: ' + sDevicePropertiesSupported + "\n" \
+            + 'functionalMode: ' + self.functionalModeStr() + "\n" \
+            + 'operationsSupported: ' + sOps + "\n" \
+            + 'eventsSupported: ' + sEvents + "\n" \
+            + 'devicePropertiesSupported: ' + sProps + "\n" \
             + 'captureFormats: ' + sCaptureFormats + "\n" \
             + 'imageFormats: ' + sImageFormats + "\n" \
             + 'manufacturer: ' + str(self.manufacturer) + "\n" \

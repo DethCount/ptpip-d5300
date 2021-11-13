@@ -1,5 +1,7 @@
 import struct
 
+from .packet import Packet
+
 from .init_cmd_req import InitCmdReq
 from .init_cmd_ack import InitCmdAck
 from .event_req import EventReq
@@ -14,7 +16,7 @@ from .ping import Ping
 
 class PacketFactory(object):
 
-    def createPacket(data = None):
+    def createPacket(data = None, request: Packet = None):
         if data is None:
             return None
 
@@ -31,7 +33,7 @@ class PacketFactory(object):
             return EventReq(data[4:])
         elif cmdtype == 4:
             print("EventAck")
-            return EventAck(data[4:])
+            return EventAck(data[4:], request=request)
         elif cmdtype == 5:
             print("InitFail")
             return InitFail(data[4:])
@@ -40,16 +42,16 @@ class PacketFactory(object):
             return CmdRequest(data[4:])
         elif cmdtype == 7:
             print("CmdResponse")
-            return CmdResponse(data[4:])
+            return CmdResponse(data[4:], request=request)
         elif cmdtype == 9:
             print("StartDataPacket")
-            return StartDataPacket(data[4:])
+            return StartDataPacket(data[4:], request=request)
         elif cmdtype == 10:
             print("DataPacket")
-            return DataPacket(data[4:])
+            return DataPacket(data[4:], request=request)
         elif cmdtype == 12:
             print("EndDataPacket")
-            return EndDataPacket(data[4:])
+            return EndDataPacket(data[4:], request=request)
         elif cmdtype == 13:
             print("Ping")
             return Ping(data[4:])

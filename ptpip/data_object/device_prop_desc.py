@@ -1,16 +1,31 @@
-from ptpip.exposure_index import ExposureIndex
-from ptpip.exposure_program_mode import ExposureProgramMode
-from ptpip.exposure_time import ExposureTime
-from ptpip.flash_mode import FlashMode
-from ptpip.focus_mode import FocusMode
-from ptpip.still_capture_mode import StillCaptureMode
-from ptpip.white_balance import WhiteBalance
+from ptpip.constants.device.property_type import DevicePropertyType
+from ptpip.constants.device.on_off_property import OnOffProperty
+
+from ptpip.constants.device.auto_off_time import AutoOffTime
+from ptpip.constants.device.auto_meter_off_delay import AutoMeterOffDelay
+from ptpip.constants.device.beep import Beep
+from ptpip.constants.device.exposure_ev_step import ExposureEVStep
+from ptpip.constants.device.exposure_index import ExposureIndex
+from ptpip.constants.device.exposure_metering_mode import ExposureMeteringMode
+from ptpip.constants.device.exposure_program_mode import ExposureProgramMode
+from ptpip.constants.device.exposure_time import ExposureTime
+from ptpip.constants.device.flash_mode import FlashMode
+from ptpip.constants.device.focus_metering_mode import FocusMeteringMode
+from ptpip.constants.device.focus_mode import FocusMode
+from ptpip.constants.device.lcd_power_off import LCDPowerOff
+from ptpip.constants.device.read_mode import ReadMode
+from ptpip.constants.device.remote_control_delay import RemoteControlDelay
+from ptpip.constants.device.scene_mode import SceneMode
+from ptpip.constants.device.self_timer_delay import SelfTimerDelay
+from ptpip.constants.device.self_timer_shoot_expose import SelfTimerShootExpose
+from ptpip.constants.device.still_capture_mode import StillCaptureMode
+from ptpip.constants.device.wb_tune_fluorescent import WbTuneFluorescent
+from ptpip.constants.device.white_balance import WhiteBalance
+
+from ptpip.constants.property_type import PropertyType
+from ptpip.constants.property_type_mutation import PropertyTypeMutation
 
 from ptpip.data_object import DataObject
-from ptpip.device_property_type import DevicePropertyType
-from ptpip.property_type import PropertyType
-from ptpip.property_type_mutation import PropertyTypeMutation
-from ptpip.read_mode import ReadMode
 
 class DevicePropDesc():
     def __init__(self, packet, data):
@@ -41,7 +56,6 @@ class DevicePropDesc():
         (self.value, pos) = DataObject.ParseType(self.prop_type.name, data, pos)
 
         self.mutation = None
-        # print(str(self))
 
         (self.mutation, pos) = DataObject.ParseUint8(data, pos)
         self.mutation = PropertyTypeMutation(self.mutation)
@@ -62,10 +76,35 @@ class DevicePropDesc():
             print(str(e))
 
     def propertyValueStr(self, value):
+        if self.type == DevicePropertyType.AutoMeterOffDelay \
+            and value in AutoMeterOffDelay._value2member_map_ \
+            :
+                return AutoMeterOffDelay(value).name
+
+        if self.type == DevicePropertyType.AutoOffTime \
+            and value in AutoOffTime._value2member_map_ \
+            :
+                return AutoOffTime(value).name
+
+        if self.type == DevicePropertyType.Beep \
+            and value in Beep._value2member_map_ \
+            :
+                return Beep(value).name
+
+        if self.type == DevicePropertyType.ExposureEVStep \
+            and value in ExposureEVStep._value2member_map_ \
+            :
+                return ExposureEVStep(value).name
+
         if self.type == DevicePropertyType.ExposureIndex \
             and value in ExposureIndex._value2member_map_ \
             :
                 return ExposureIndex(value).name
+
+        if self.type == DevicePropertyType.ExposureMeteringMode \
+            and value in ExposureMeteringMode._value2member_map_ \
+            :
+                return ExposureMeteringMode(value).name
 
         if self.type == DevicePropertyType.ExposureProgramMode \
             and value in ExposureProgramMode._value2member_map_ \
@@ -82,30 +121,84 @@ class DevicePropDesc():
             :
                 return FlashMode(value).name
 
+        if self.type == DevicePropertyType.FocusMeteringMode \
+            and value in FocusMeteringMode._value2member_map_ \
+            :
+                return FocusMeteringMode(value).name
+
         if self.type == DevicePropertyType.FocusMode \
             and value in FocusMode._value2member_map_ \
             :
                 return FocusMode(value).name
+
+        if self.type == DevicePropertyType.ISOAutoHighLimit \
+            and value in ExposureIndex._value2member_map_ \
+            :
+                return ExposureIndex(value).name
+
+        if self.type == DevicePropertyType.ISOAutoShutterTime \
+            and value in ExposureTime._value2member_map_ \
+            :
+                return ExposureTime(value).name
+
+        if self.type == DevicePropertyType.LCDPowerOff \
+            and value in LCDPowerOff._value2member_map_ \
+            :
+                return LCDPowerOff(value).name
+
+        if self.type == DevicePropertyType.RemoteControlDelay \
+            and value in RemoteControlDelay._value2member_map_ \
+            :
+                return RemoteControlDelay(value).name
+
+        if self.type == DevicePropertyType.SelfTimerDelay \
+            and value in SelfTimerDelay._value2member_map_ \
+            :
+                return SelfTimerDelay(value).name
+
+        if self.type == DevicePropertyType.SelfTimerShootExpose \
+            and value in SelfTimerShootExpose._value2member_map_ \
+            :
+                return SelfTimerShootExpose(value).name
+
+        if self.type == DevicePropertyType.SceneMode \
+            and value in SceneMode._value2member_map_ \
+            :
+                return SceneMode(value).name
 
         if self.type == DevicePropertyType.StillCaptureMode \
             and value in StillCaptureMode._value2member_map_ \
             :
                 return StillCaptureMode(value).name
 
+        if self.type == DevicePropertyType.WbTuneFluorescent \
+            and value in WbTuneFluorescent._value2member_map_ \
+            :
+                return WbTuneFluorescent(value).name
+
         if self.type == DevicePropertyType.WhiteBalance \
             and value in WhiteBalance._value2member_map_ \
             :
                 return WhiteBalance(value).name
 
-        return str(value)
+        if self.type in (
+            DevicePropertyType.ISOAutoControl,
+            DevicePropertyType.AELockRelease
+        ) and value in OnOffProperty._value2member_map_ \
+        :
+            return OnOffProperty(value).name
 
+        return str(value)
 
     def __str__(self):
         sMutation = ''
         if self.mutation == PropertyTypeMutation.Range:
-            sMutation = "\t" + 'min_value: ' + self.propertyValueStr(self.min_value) + "\n" \
-                + "\t" + 'max_value: ' + self.propertyValueStr(self.min_value) + "\n" \
-                + "\t" + 'step: ' + str(self.step) + "\n"
+            if self.min_value != 0 and self.max_value != 0:
+                sMutation += "\t" + 'min_value: ' + self.propertyValueStr(self.min_value) + "\n" \
+                    + "\t" + 'max_value: ' + self.propertyValueStr(self.min_value) + "\n"
+
+            if self.step != 1:
+                sMutation += "\t" + 'step: ' + str(self.step) + "\n"
         elif self.mutation == PropertyTypeMutation.Enumeration:
             sValues = []
             for value in self.values:

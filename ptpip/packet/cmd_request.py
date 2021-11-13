@@ -1,6 +1,7 @@
 import struct
 
-from ptpip.cmd_type import CmdType
+from ptpip.constants.cmd_type import CmdType
+
 from ptpip.packet import Packet
 
 class CmdRequest(Packet):

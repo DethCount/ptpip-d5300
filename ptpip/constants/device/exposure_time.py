@@ -1,6 +1,7 @@
 from enum import Enum
 
 class ExposureTime(Enum):
+    Undefined      = 0x00000000
     OneOver4000    = 0x00000002 # 2 '1/4000'
     OneOver3200    = 0x00000003 # 3
     OneOver2500    = 0x00000004 # 4
@@ -53,5 +54,5 @@ class ExposureTime(Enum):
     OneBy20        = 0x00030D40 # 200000
     OneBy25        = 0x0003D090 # 250000
     OneBy30        = 0x000493E0 # 300000
-    Blub           = 0xFFFFFFFD # 4294967293
-    Time           = 0xFFFFFFFF # 4294967295
+    Time           = 0xFFFFFFFD # 4294967293
+    Bulb           = 0xFFFFFFFF # 4294967295
