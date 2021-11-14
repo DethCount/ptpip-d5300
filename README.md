@@ -3,7 +3,7 @@
 ```
 import asyncio
 
-from ptpip.client import PtpIpClien
+from ptpip.client import PtpIpClient
 from ptpip.report.html_device import HtmlDeviceReportGenerator
 
 async def usePtpIpClient(client: PtpIpClient):
