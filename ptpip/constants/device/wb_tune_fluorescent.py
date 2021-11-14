@@ -1,6 +1,6 @@
 from enum import Enum
 
-class WbTuneFluorescent(Enum):
+class WBTuneFluorescent(Enum):
     SodiumLampMixedLight            = 0x00 # 0
     CoolWhiteFluorescentLamp        = 0x01 # 1
     WarmWhiteFluorescentLamp        = 0x02 # 2
