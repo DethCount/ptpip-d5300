@@ -2,7 +2,7 @@ import struct
 
 from ptpip.event.event import Event
 
-class EventFactory(object):
+class EventFactory():
     """
     This is a factory to produce an array of Event objects if it got passd a data reply
     from a GetEvent request 0x90C7

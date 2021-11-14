@@ -1,7 +1,6 @@
 import struct
 
-class DataObject(object):
-    """docstring for DataObject"""
+class DataObject():
     def __init__(self, packet, data):
         super(DataObject, self).__init__()
         self.packet = packet

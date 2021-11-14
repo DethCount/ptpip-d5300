@@ -3,9 +3,9 @@ import struct
 from .packet import Packet
 
 class InitCmdAck(Packet):
-    """docstring for InitCmd"""
-    def __init__(self, data=None):
+    def __init__(self, data = None):
         super(InitCmdAck, self).__init__()
+
         self.cmdtype = struct.pack('I', 0x02)
         if data is not None:
             self.session_id = data[0:4]

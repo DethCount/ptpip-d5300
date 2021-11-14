@@ -23,11 +23,14 @@ from ptpip.packet.init_cmd_ack import InitCmdAck
 from ptpip.packet.init_cmd_req import InitCmdReq
 from ptpip.packet.event_req import EventReq
 
-class Connection(object):
+class Connection():
+    DEFAULT_HOST = '192.168.1.1'
+    DEFAULT_PORT = 15740
 
     """docstring for PtpIP"""
     def __init__(self):
         super(Connection, self).__init__()
+
         self.session = None
         self.session_events = None
         self.session_id = None
@@ -36,10 +39,9 @@ class Connection(object):
         self.object_queue = []
 
     def open(self,
-        host='192.168.1.1',
-        port=15740,
-        transaction_id=0,
-        communication_thread_delay=1
+        host = None,
+        port = None,
+        transaction_id = 0
     ):
         # Open both session, first one for for commands, second for events
         self.session = self.connect(host=host, port=port)
@@ -49,9 +51,9 @@ class Connection(object):
 
         print("session_id: " + str(struct.unpack('I', self.session_id)[0]))
         ptpip_cmd = CmdRequest(
-            transaction_id=transaction_id,
-            cmd=CmdType.OpenSession.value,
-            param1=struct.unpack('I', self.session_id)[0]
+            transaction_id = transaction_id,
+            cmd = CmdType.OpenSession.value,
+            param1 = struct.unpack('I', self.session_id)[0]
         )
         self.send_receive_packet(ptpip_cmd, self.session)
 
@@ -132,7 +134,13 @@ class Connection(object):
     def send_cmd(self, ptpip_packet):
         self.cmd_queue.append(ptpip_packet)
 
-    def connect(self, host='192.168.1.1', port=15740):
+    def connect(self, host = None, port = None):
+        if host == None:
+            host = self.DEFAULT_HOST
+
+        if port == None:
+            port = self.DEFAULT_PORT
+
         try:
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             s.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
@@ -142,96 +150,6 @@ class Connection(object):
                 s.close()
             print("Could not open socket: " + str(err))
         return s
-
-    async def get_device_info(self, delay=1, transaction_id=1):
-        print('get_device_info')
-        cmd = CmdRequest(
-            transaction_id=transaction_id,
-            cmd=CmdType.GetDeviceInfo.value
-        )
-        self.send_cmd(cmd)
-
-        async for obj_data in self.listen_object_data_queue(delay = delay):
-            if struct.unpack('I', obj_data.packet.transaction_id)[0] == transaction_id:
-                self.object_queue.remove(obj_data)
-                if isinstance(obj_data, DeviceInfo):
-                    return obj_data
-                elif isinstance(obj_data, DataObject):
-                    return ResponseCode(obj_data.packet.ptp_response_code)
-                else:
-                    return None
-
-
-    async def discover_device_prop_desc(
-        self,
-        device: DeviceInfo,
-        delay=1,
-        transaction_id=1
-    ):
-        print('discover_device_prop_desc')
-        discovered = []
-        for idx, prop in enumerate(DevicePropertyType._value2member_map_):
-            if prop == DevicePropertyType.Undefined.value \
-                or prop in device.properties \
-            :
-                continue
-
-            response = await self.get_device_prop_desc(
-                prop,
-                delay=delay,
-                transaction_id=transaction_id << 3 | idx
-            )
-
-            if isinstance(response, ResponseCode):
-                print(DevicePropertyType(prop).name + ': ' + response.name)
-                continue
-
-            discovered.append(response)
-
-        return discovered
-
-
-    async def get_device_prop_desc(self, prop, delay=1, transaction_id=1):
-        print('get_device_prop_desc')
-        cmd = CmdRequest(
-            transaction_id=transaction_id,
-            cmd=CmdType.GetDevicePropDesc.value,
-            param1=prop
-        )
-        self.send_cmd(cmd)
-
-        async for obj_data in self.listen_object_data_queue(delay = delay):
-            if struct.unpack('I', obj_data.packet.transaction_id)[0] == transaction_id:
-                self.object_queue.remove(obj_data)
-                if isinstance(obj_data, DevicePropDesc):
-                    return obj_data
-                elif isinstance(obj_data, DataObject):
-                    return ResponseCode(obj_data.packet.ptp_response_code)
-                else:
-                    return None
-
-    async def get_picture_control_capabilities(
-        self,
-        picCtrlItem,
-        defaultFlag=0x00,
-        delay=1,
-        transaction_id=1
-    ):
-        print('get_picture_control_capabilities')
-        cmd = CmdRequest(
-            transaction_id=transaction_id,
-            cmd=CmdType.GetPicCtrlCapability.value,
-            param1=picCtrlItem,
-            param2=defaultFlag
-        )
-        self.send_cmd(cmd)
-
-        async for obj_data in self.listen_object_data_queue(delay = delay):
-            if isinstance(obj_data, DataObject) \
-                and struct.unpack('I', obj_data.packet.transaction_id)[0] == transaction_id \
-            :
-                self.object_queue.remove(obj_data)
-                return obj_data
 
     def send_receive_packet(self, packet: Packet, session):
         if isinstance(packet, InitCmdReq):

@@ -5,10 +5,11 @@ import uuid
 from .packet import Packet
 
 class InitCmdReq(Packet):
-    """docstring for InitCmd"""
-    def __init__(self, data=None):
+    def __init__(self, data = None):
         super(InitCmdReq, self).__init__()
+
         self.cmdtype = struct.pack('I', 0x01)
+
         if data is None:
             guid = uuid.uuid4()
             self.guid = guid.bytes

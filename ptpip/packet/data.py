@@ -3,8 +3,7 @@ import struct
 from .packet import Packet
 
 class DataPacket(Packet):
-    """docstring for Start_Data_Packet"""
-    def __init__(self, data=None, request: Packet = None):
+    def __init__(self, data = None, request: Packet = None):
         super(DataPacket, self).__init__()
 
         self.cmdtype = struct.pack('I', 0x10)

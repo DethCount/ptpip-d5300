@@ -17,6 +17,7 @@ class CmdRequest(Packet):
         param5=None
     ):
         super(CmdRequest, self).__init__()
+
         self.cmdtype = struct.pack('I', 0x06)
         self.unkown = struct.pack('I', 0x01)
         self.ptp_cmd = cmd

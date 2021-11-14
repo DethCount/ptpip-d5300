@@ -14,8 +14,7 @@ from .data import DataPacket
 from .end_data import EndDataPacket
 from .ping import Ping
 
-class PacketFactory(object):
-
+class PacketFactory():
     def createPacket(data = None, request: Packet = None):
         if data is None:
             return None

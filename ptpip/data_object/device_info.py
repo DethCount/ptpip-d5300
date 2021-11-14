@@ -8,7 +8,7 @@ from ptpip.constants.device.vendor_extension import VendorExtension
 
 from .data_object import DataObject
 
-class DeviceInfo(object):
+class DeviceInfo():
     def __init__(self, packet, data):
         super(DeviceInfo, self).__init__()
         self.packet = packet

@@ -3,10 +3,10 @@ import struct
 from .packet import Packet
 
 class Ping(Packet):
-    """docstring for Start_Data_Packet"""
-    def __init__(self, data=None):
-        self.cmdtype = struct.pack('I', 0x13)
+    def __init__(self, data = None):
         super(Ping, self).__init__()
+
+        self.cmdtype = struct.pack('I', 0x13)
         self.data = data
 
     def data(self):
