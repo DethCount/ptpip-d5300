@@ -6,10 +6,14 @@ from threading import Thread
 from ptpip.connection import Connection
 
 from ptpip.constants.cmd_type import CmdType
+from ptpip.constants.property_type import PropertyType
 from ptpip.constants.response_code import ResponseCode
+
 from ptpip.constants.device.property_type import DevicePropertyType
 
+from ptpip.packet.stream_reader import StreamReader
 from ptpip.packet.cmd_request import CmdRequest
+from ptpip.packet.cmd_response import CmdResponse
 
 from ptpip.data_object.data_object import DataObject
 from ptpip.data_object.device_info import DeviceInfo
@@ -28,57 +32,59 @@ class PtpIpClient():
         self.host = host
         self.port = port
         self.communicationThreadDelay = communicationThreadDelay
+        self.lastTransactionId = 2021;
 
         self.conn = Connection()
         self.conn.open(self.host, self.port)
 
         # Start the Thread which is constantly checking the status of the camera
         # and which is processing new command packages which should be send
-        thread_comm = Thread(
-            target = self.conn.communication_thread,
+        threadComm = Thread(
+            target = self.conn.communicationThread,
             args = (communicationThreadDelay,)
         )
 
-        thread_comm.daemon = True
-        thread_comm.start()
+        threadComm.daemon = True
+        threadComm.start()
 
-        event_loop = asyncio.get_event_loop()
+        eventLoop = asyncio.get_event_loop()
 
         try:
-            event_loop.run_until_complete(
+            eventLoop.run_until_complete(
                 middleware(self)
             )
         except KeyboardInterrupt:
-            event_loop.stop()
+            eventLoop.stop()
             pass
 
-    async def get_device_info(self, delay = 0, transaction_id = 1):
-        print('get_device_info')
+    async def getDeviceInfo(self, delay = 0, transactionId = None):
+        print('getDeviceInfo')
+        if transactionId == None:
+            self.lastTransactionId += 1
+            transactionId = self.lastTransactionId
+
         cmd = CmdRequest(
-            transaction_id = transaction_id,
+            transactionId = transactionId,
             cmd = CmdType.GetDeviceInfo.value
         )
-        self.conn.send_cmd(cmd)
+        self.conn.sendCmd(cmd)
 
-        async for obj_data in self.conn.listen_object_data_queue(delay = delay):
-            if struct.unpack('I', obj_data.packet.transaction_id)[0] \
-                 == transaction_id \
-            :
-                self.conn.object_queue.remove(obj_data)
-                if isinstance(obj_data, DeviceInfo):
-                    return obj_data
-                elif isinstance(obj_data, DataObject):
-                    return ResponseCode(obj_data.packet.ptp_response_code)
+        async for objData in self.conn.listenObjectDataQueue(delay = delay):
+            if objData.packet.transactionId == transactionId :
+                self.conn.objectQueue.remove(objData)
+                if isinstance(objData, DeviceInfo):
+                    return objData
+                elif isinstance(objData, DataObject):
+                    return ResponseCode(objData.packet.responseCode)
                 else:
                     return None
 
-    async def discover_device_prop_desc(
+    async def discoverDevicePropDesc(
         self,
         device: DeviceInfo,
-        delay = 0,
-        transaction_id = 1
+        delay = 0
     ):
-        print('discover_device_prop_desc')
+        print('discoverDevicePropDesc')
         discovered = []
         for idx, prop in enumerate(DevicePropertyType._value2member_map_):
             if prop == DevicePropertyType.Undefined.value \
@@ -86,10 +92,12 @@ class PtpIpClient():
             :
                 continue
 
-            response = await self.get_device_prop_desc(
+            self.lastTransactionId += 1
+
+            response = await self.getDevicePropDesc(
                 prop,
                 delay = delay,
-                transaction_id = transaction_id << 3 | idx
+                transactionId = self.lastTransactionId
             )
 
             if isinstance(response, ResponseCode):
@@ -101,53 +109,126 @@ class PtpIpClient():
         return discovered
 
 
-    async def get_device_prop_desc(self, prop, delay = 0, transaction_id = 1):
-        print('get_device_prop_desc')
+    async def getDevicePropDesc(self, prop, delay = 0, transactionId = None):
+        print('getDevicePropDesc')
+        if transactionId == None:
+            self.lastTransactionId += 1
+            transactionId = self.lastTransactionId
+
         cmd = CmdRequest(
-            transaction_id = transaction_id,
+            transactionId = transactionId,
             cmd = CmdType.GetDevicePropDesc.value,
             param1 = prop
         )
 
-        self.conn.send_cmd(cmd)
+        self.conn.sendCmd(cmd)
 
-        async for obj_data in self.conn.listen_object_data_queue(delay = delay):
-            obj_transaction_id = struct.unpack(
-                'I',
-                obj_data.packet.transaction_id
-            )[0]
-
-            if obj_transaction_id == transaction_id:
-                self.conn.object_queue.remove(obj_data)
-                if isinstance(obj_data, DevicePropDesc):
-                    return obj_data
-                elif isinstance(obj_data, DataObject):
-                    return ResponseCode(obj_data.packet.ptp_response_code)
+        async for objData in self.conn.listenObjectDataQueue(delay = delay):
+            if objData.packet.transactionId == transactionId:
+                self.conn.objectQueue.remove(objData)
+                if isinstance(objData, DevicePropDesc):
+                    return objData
+                elif isinstance(objData, DataObject):
+                    return ResponseCode(objData.packet.responseCode)
                 else:
                     return None
 
-    async def get_picture_control_capabilities(
+    async def setDevicePropValue(
+        self,
+        prop,
+        propType: PropertyType,
+        value,
+        delay = 0,
+        transactionId = None
+    ):
+        print('setDevicePropValue')
+        if transactionId == None:
+            self.lastTransactionId += 1
+            transactionId = self.lastTransactionId
+
+        cmd = CmdRequest(
+            transactionId = transactionId,
+            cmd = CmdType.SetDevicePropValue.value,
+            param1 = prop,
+            paramType1 = PropertyType.Uint32,
+            param2 = value,
+            paramType2 = propType
+        )
+
+        self.conn.sendCmd(cmd)
+
+        async for objData in self.conn.listenObjectDataQueue(delay = delay):
+            if objData.packet.transactionId == transactionId:
+                self.conn.objectQueue.remove(objData)
+                if isinstance(objData, DataObject):
+                    if isinstance(objData.packet, CmdResponse) \
+                        and objData.packet.responseCode \
+                            != ResponseCode.OK.value \
+                    :
+                        return ResponseCode(objData.packet.responseCode)
+                    return objData
+                else:
+                    return None
+
+    async def getDevicePropValue(
+        self,
+        prop,
+        propType: PropertyType,
+        delay = 0,
+        transactionId = None
+    ):
+        print('getDevicePropValue')
+        if transactionId == None:
+            self.lastTransactionId += 1
+            transactionId = self.lastTransactionId
+
+        cmd = CmdRequest(
+            transactionId = transactionId,
+            cmd = CmdType.GetDevicePropValue.value,
+            param1 = prop
+        )
+
+        self.conn.sendCmd(cmd)
+
+        async for objData in self.conn.listenObjectDataQueue(delay = delay):
+            if objData.packet.transactionId == transactionId:
+                self.conn.objectQueue.remove(objData)
+                if isinstance(objData, DataObject):
+                    if isinstance(objData.packet, CmdResponse) \
+                        and objData.packet.responseCode \
+                            != ResponseCode.OK.value \
+                    :
+                        return ResponseCode(objData.packet.responseCode)
+                    return StreamReader(objData.data) \
+                        .readType(propType.name)
+                else:
+                    return None
+
+    async def getPictureControlCapabilities(
         self,
         picCtrlItem,
         defaultFlag = 0x00,
         delay = 0,
-        transaction_id = 1
+        transactionId = None
     ):
-        print('get_picture_control_capabilities')
+        print('getPictureControlCapabilities')
+        if transactionId == None:
+            self.lastTransactionId += 1
+            transactionId = self.lastTransactionId
+
         cmd = CmdRequest(
-            transaction_id = transaction_id,
+            transactionId = transactionId,
             cmd = CmdType.GetPicCtrlCapability.value,
             param1 = picCtrlItem,
             param2 = defaultFlag
         )
 
-        self.conn.send_cmd(cmd)
+        self.conn.sendCmd(cmd)
 
-        async for obj_data in self.conn.listen_object_data_queue(delay = delay):
-            if isinstance(obj_data, DataObject) \
-                and struct.unpack('I', obj_data.packet.transaction_id)[0] \
-                    == transaction_id \
+        async for objData in self.conn.listenObjectDataQueue(delay = delay):
+            if isinstance(objData, DataObject) \
+                and objData.packet.transactionId == transactionId \
             :
-                self.object_queue.remove(obj_data)
+                self.objectQueue.remove(objData)
 
-                return obj_data
+                return objData

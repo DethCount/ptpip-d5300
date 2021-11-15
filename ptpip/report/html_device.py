@@ -47,51 +47,89 @@ class HtmlDeviceReportGenerator():
         return html + '</ul>'
 
     def generatePropertyReport(self, prop: DevicePropDesc):
-        html = '<tr>'
-
-        html += '<td style="vertical-align:top;">' + escape(str(prop.type_id)) +'</td>'
-        html += '<td style="vertical-align:top;font-weight:bold;">' + escape(prop.type.name if prop.type != None else '') +'</td>'
-        html += '<td>' + escape(prop.prop_type.name if prop.prop_type != None else prop.prop_type_id) +'</td>'
-        html += '<td>' + escape(prop.mode.name) +'</td>'
-        html += '<td>' + escape(prop.propertyValueStr(prop.default_value)) +'</td>'
-        html += '<td>' + escape(prop.propertyValueStr(prop.value)) +'</td>'
-        html += '<td>' + escape(prop.mutation.name) +'</td>'
+        html = '<tr>' \
+            + '<td style="vertical-align:top;">' \
+                + escape(str(prop.typeId)) \
+            + '</td>' \
+            + '<td style="vertical-align:top;font-weight:bold;">' \
+                + escape(prop.type.name if prop.type != None else '') \
+            + '</td>' \
+            + '<td>' \
+                + escape(
+                    prop.propType.name \
+                    if prop.propType != None \
+                    else prop.propTypeId
+                ) \
+            + '</td>' \
+            + '<td>' + escape(prop.mode.name) + '</td>' \
+            + '<td>' \
+                + escape(prop.propertyValueStr(prop.defaultValue)) \
+            + '</td>' \
+            + '<td>' \
+                + escape(prop.propertyValueStr(prop.value)) \
+            + '</td>' \
+            + '<td>' \
+                + escape(prop.mutation.name) \
+            + '</td>'
 
         if prop.mutation == PropertyTypeMutation.Range:
-            html += '<td>'
-            html += '<table border="1" width="100%">'
-            html += '<thead><th>Min</th><th>Max</th><th>Step</th></thead>'
-            html += '<tbody>'
-            html += '<tr><td>' + escape(prop.propertyValueStr(prop.min_value)) + '</td>'
-            html += '<td>' + escape(prop.propertyValueStr(prop.max_value)) + '</td>'
-            html += '<td>' + escape(str(prop.step)) + '</td>'
-            html += '</tr></tbody>'
-            html += '</table>'
-            html += '</td>'
+            html += '<td>' \
+                    + '<table border="1" width="100%">' \
+                        + '<thead>' \
+                            + '<th>Min</th>' \
+                            + '<th>Max</th>' \
+                            + '<th>Step</th>' \
+                        + '</thead>' \
+                        + '<tbody>' \
+                            + '<tr>' \
+                                + '<td>' \
+                                    + escape(
+                                        prop.propertyValueStr(prop.minValue)
+                                    ) \
+                                + '</td>' \
+                                + '<td>' \
+                                    + escape(
+                                        prop.propertyValueStr(prop.maxValue)
+                                    ) \
+                                + '</td>' \
+                                + '<td>' + escape(str(prop.step)) + '</td>' \
+                            + '</tr>' \
+                        + '</tbody>' \
+                    + '</table>' \
+                + '</td>'
         elif prop.mutation == PropertyTypeMutation.Enumeration:
-            html += '<td>'
-            html += '<ul>'
+            html += '<td>' \
+                + '<ul>'
+
             for value in prop.values:
                 html += '<li>' + escape(prop.propertyValueStr(value)) + '</li>'
-            html += '</ul>'
-            html += '</td>'
+
+            html += '</ul>' \
+                + '</td>'
         else:
             html += '<td></td>'
 
         return html + '</tr>'
 
     def generatePropertiesReport(self, properties: List[DevicePropDesc] = []):
-        html = '<table border="1" width="100%">'
-        html += '<thead><th>Id</th><th>Name</th><th>Type</th><th>Mode</th><th>Default</th><th>Value</th><th colspan="2">Boundaries</th></thead>'
-        html += '<tbody>'
+        html = '<table border="1" width="100%">' \
+            + '<thead>' \
+                + '<th>Id</th>' \
+                + '<th>Name</th>' \
+                + '<th>Type</th>' \
+                + '<th>Mode</th>' \
+                + '<th>Default</th>' \
+                + '<th>Value</th>' \
+                + '<th colspan="2">Boundaries</th>' \
+            + '</thead>' \
+            + '<tbody>'
 
         for prop in properties:
             print(prop)
             html += self.generatePropertyReport(prop)
 
-        html += '</tbody>'
-
-        return html + '</table>'
+        return html + '</tbody>' \
+            + '</table>'
 
     def generate(self):
         return '<table border="1">' \

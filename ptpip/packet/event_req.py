@@ -1,23 +1,29 @@
 import struct
 
 from .packet import Packet
+from .stream_reader import StreamReader
+from .stream_writer import StreamWriter
 
 class EventReq(Packet):
-    def __init__(self, data = None, session_id = None):
+    def __init__(self, data = None, sessionId = None):
         super(EventReq, self).__init__()
 
-        self.cmdtype = struct.pack('I', 0x03)
-        self.session_id = None
+        self.cmdtype = 3
+        self.sessionId = None
 
         if data is not None:
-            self.session_id = data[0:4]
-        elif session_id is not None:
-            self.session_id = session_id
+            reader = StreamReader(data = data)
+            self.sessionId = reader.readUint32()
+        elif sessionId is not None:
+            self.sessionId = sessionId
 
     def data(self):
-        return self.cmdtype + self.session_id
+        return StreamWriter() \
+            .writeUint32(self.cmdtype) \
+            .writeUint32(self.sessionId) \
+            .data
 
     def __str__(self):
         return 'EventReq: ' + "\n" \
             + "\t" + 'cmdtype: ' + str(self.cmdtype) + "\n" \
-            + "\t" + 'session_id: ' + str(self.session_id) + "\n"
+            + "\t" + 'sessionId: ' + str(self.sessionId) + "\n"

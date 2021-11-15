@@ -4,6 +4,7 @@ import struct
 import time
 
 from ptpip.constants.cmd_type import CmdType
+from ptpip.constants.property_type import PropertyType
 from ptpip.constants.response_code import ResponseCode
 from ptpip.constants.device.property_type import DevicePropertyType
 
@@ -14,6 +15,8 @@ from ptpip.data_object.device_prop_desc import DevicePropDesc
 from ptpip.event.factory import EventFactory
 
 from ptpip.packet.packet import Packet
+from ptpip.packet.stream_reader import StreamReader
+from ptpip.packet.stream_writer import StreamWriter
 from ptpip.packet.factory import PacketFactory
 from ptpip.packet.cmd_request import CmdRequest
 from ptpip.packet.cmd_response import CmdResponse
@@ -32,107 +35,98 @@ class Connection():
         super(Connection, self).__init__()
 
         self.session = None
-        self.session_events = None
-        self.session_id = None
-        self.cmd_queue = []
-        self.event_queue = []
-        self.object_queue = []
+        self.sessionEvents = None
+        self.sessionId = None
+        self.cmdQueue = []
+        self.eventQueue = []
+        self.objectQueue = []
 
     def open(self,
         host = None,
         port = None,
-        transaction_id = 0
+        transactionId = 0
     ):
         # Open both session, first one for for commands, second for events
-        self.session = self.connect(host=host, port=port)
-        self.send_receive_packet(InitCmdReq(), self.session)
-        self.session_events = self.connect(host=host, port=port)
-        self.send_receive_packet(EventReq(), self.session_events)
+        self.session = self.connect(host = host, port = port)
+        self.sendReceivePacket(InitCmdReq(), self.session)
 
-        print("session_id: " + str(struct.unpack('I', self.session_id)[0]))
-        ptpip_cmd = CmdRequest(
-            transaction_id = transaction_id,
+        self.sessionEvents = self.connect(host = host, port = port)
+        self.sendReceivePacket(EventReq(), self.sessionEvents)
+
+        cmd = CmdRequest(
+            transactionId = transactionId,
             cmd = CmdType.OpenSession.value,
-            param1 = struct.unpack('I', self.session_id)[0]
+            param1 = self.sessionId,
+            paramType1 = PropertyType.Uint32
         )
-        self.send_receive_packet(ptpip_cmd, self.session)
 
-    def communication_thread(self, delay = 1):
+        self.sendReceivePacket(cmd, self.session)
+
+    def communicationThread(self, delay = 0):
         print('Communication: ' + str(type(delay)) + ' ' + str(delay))
         while True:
-            if len(self.cmd_queue) == 0:
+            if len(self.cmdQueue) == 0:
                 # do a ping receive a pong (same as ping) as reply to keep the connection alive
                 # couldnt get any reply onto a propper Ping packet so i am querying the status
                 # of the device
-                # print("CCC Ping...")
-                packet_reply = self.send_receive_packet(
+                reply = self.sendReceivePacket(
                     CmdRequest(
-                        transaction_id=6,
-                        cmd=CmdType.DeviceReady.value
+                        transactionId = 6,
+                        cmd = CmdType.DeviceReady.value
                     ),
                     self.session
                 )
-                # print('Ping end')
             else:
-                # get the next command from command the queue
-                cmd = self.cmd_queue.pop()
-                # print("CCC Pop : " + str(struct.unpack('I', cmd.cmdtype)[0]))
-                packet_reply = self.send_receive_packet(cmd, self.session)
-                if (packet_reply.ptp_response_code == ResponseCode.OK.value \
-                        and packet_reply.ptp_response_code == ResponseCode.DeviceBusy.value):
-                    print("CCC Cmd send successfully")
-                else:
-                    print("CCC Cmd reply is: " + str(packet_reply.ptp_response_code))
+                cmd = self.cmdQueue.pop()
+                reply = self.sendReceivePacket(cmd, self.session)
+                if reply.responseCode != ResponseCode.OK.value \
+                    and reply.responseCode != ResponseCode.DeviceBusy.value \
+                :
+                    print("CCC Cmd reply is: " + str(reply.responseCode))
 
-            # wait delay seconds before new packets are processed/send to the camera
-            # print('Comm delay start')
             time.sleep(delay)
-            # print('Comm delay end')
 
-        print('End comm')
-
-    def queue_object(self, data_object):
-        cmdtype = data_object.packet.ptp_cmd
-        transaction_id = struct.unpack('I', data_object.packet.transaction_id)[0]
+    def queueObject(self, dataObject):
+        cmdtype = dataObject.packet.cmd
+        transactionId = dataObject.packet.transactionId
 
         sCmdType = CmdType(cmdtype).name \
             if cmdtype in CmdType._value2member_map_ \
             else str(cmdtype)
 
-        print('OOO Response to ' + sCmdType + ', transaction_id: ' + str(transaction_id))
+        print('OOO Response to ' + sCmdType + ', transactionId: ' + str(transactionId))
 
         if cmdtype == CmdType.GetDeviceInfo.value:
-            device = DeviceInfo(data_object.packet, data_object.data)
-            print(str(device))
-            self.object_queue.append(device)
+            device = DeviceInfo(dataObject.packet, dataObject.data)
+            self.objectQueue.append(device)
+            # print('OOO DeviceInfo')
         elif cmdtype == CmdType.GetObject.value:
-            data_stream = io.BytesIO(data_object.data)
-            img = Image.open(data_stream)
-            print('OOO Image')
-            self.object_queue.append(img)
-            # img.save('/tmp/test_' + str(idx) + '.jpg')
+            dataStream = io.BytesIO(dataObject.data)
+            img = Image.open(dataStream)
+            # print('OOO Image')
+            self.objectQueue.append(img)
         elif cmdtype == CmdType.GetDevicePropDesc.value \
-            and data_object.data != None \
+            and dataObject.data != None \
         :
-            device_prop_desc = DevicePropDesc(data_object.packet, data_object.data)
-            print(str(device_prop_desc))
-            self.object_queue.append(device_prop_desc)
+            devicePropDesc = DevicePropDesc(dataObject.packet, dataObject.data)
+            # print(str(devicePropDesc))
+            self.objectQueue.append(devicePropDesc)
         else:
             print('OOO Ignored: ' + sCmdType)
-            self.object_queue.append(data_object)
+            self.objectQueue.append(dataObject)
 
-    async def listen_object_data_queue(self, delay = 1):
+    async def listenObjectDataQueue(self, delay = 0):
         while True:
-            # print('OOO Objects in queue: ' + str(len(self.object_queue)))
+            # print('OOO Objects in queue: ' + str(len(self.objectQueue)))
 
-            for idx, data_object in enumerate(self.object_queue):
-                yield data_object
+            for idx, dataObject in enumerate(self.objectQueue):
+                yield dataObject
 
             time.sleep(delay)
             pass
 
-    def send_cmd(self, ptpip_packet):
-        self.cmd_queue.append(ptpip_packet)
+    def sendCmd(self, packet):
+        self.cmdQueue.append(packet)
 
     def connect(self, host = None, port = None):
         if host == None:
@@ -151,110 +145,120 @@ class Connection():
             print("Could not open socket: " + str(err))
         return s
 
-    def send_receive_packet(self, packet: Packet, session):
+    def sendReceivePacket(self, packet: Packet, session):
         if isinstance(packet, InitCmdReq):
-            self.send_packet(packet, session)
-            packet_reply = self.get_response_packet(session, request=packet)
+            self.sendPacket(packet, session)
+            reply = self.getResponse(session, request = packet)
 
             # set the session id of the object if the reply is of type InitCmdAck
-            if isinstance(packet_reply, InitCmdAck):
-                self.session_id = packet_reply.session_id
+            if isinstance(reply, InitCmdAck):
+                self.sessionId = reply.sessionId
 
         elif isinstance(packet, EventReq):
-            self.send_event_req(packet, session)
+            self.sendEventReq(packet, session)
 
-            packet_reply = self.get_response_packet(session, request=packet)
+            reply = self.getResponse(session, request = packet)
 
         elif isinstance(packet, CmdRequest) \
-            and packet.ptp_cmd == CmdType.GetEvent.value \
+            and packet.cmd == CmdType.GetEvent.value \
         :
-            self.send_packet(packet, session)
-            packet_reply = self.get_response_packet(session, request=packet)
+            self.sendPacket(packet, session)
+            reply = self.getResponse(session, request = packet)
 
             # download object data
-            if isinstance(packet_reply, StartDataPacket):
-                data_length = struct.unpack('I', packet_reply.length)[0]
+            if isinstance(reply, StartDataPacket):
+                dataLength = reply.length
 
-                packet_reply = self.get_response_packet(session, request=packet)
-                data = packet_reply.data
-                while isinstance(packet_reply, DataPacket):
-                    data = data + packet_reply.data
-                    packet_reply = self.get_response_packet(session, request=packet)
+                reply = self.getResponse(session, request = packet)
+                data = reply.data
+                while isinstance(reply, DataPacket):
+                    data = data + reply.data
+                    reply = self.getResponse(session, request = packet)
 
-                if data_length == len(data):
-                    events = EventFactory(data).get_events()
+                if dataLength == len(data):
+                    events = EventFactory(data).getEvents()
                     for event in events:
-                        self.event_queue.append(event)
+                        self.eventQueue.append(event)
             else:
-                self.queue_object(DataObject(packet_reply, None))
+                self.queueObject(DataObject(reply, None))
 
-            packet_reply = self.get_response_packet(session, request=packet)
+            reply = self.getResponse(session, request = packet)
 
         elif isinstance(packet, CmdRequest) \
             and (
-                packet.ptp_cmd == CmdType.GetObject.value
-                or packet.ptp_cmd == CmdType.GetDeviceInfo.value
-                or packet.ptp_cmd == CmdType.GetDevicePropDesc.value
-                or packet.ptp_cmd == CmdType.GetPicCtrlCapability.value
-                or packet.ptp_cmd == CmdType.GetPicCtrlData.value
+                packet.cmd == CmdType.GetObject.value
+                or packet.cmd == CmdType.GetDeviceInfo.value
+                or packet.cmd == CmdType.GetDevicePropDesc.value
+                or packet.cmd == CmdType.GetDevicePropValue.value
+                or packet.cmd == CmdType.SetDevicePropValue.value
+                or packet.cmd == CmdType.GetPicCtrlCapability.value
+                or packet.cmd == CmdType.GetPicCtrlData.value
             ):
-            self.send_packet(packet, session)
-            packet_reply = self.get_response_packet(session)
+            self.sendPacket(packet, session)
+            print(str(packet.transactionId))
+            reply = self.getResponse(session)
 
-            data_length = 0
-            if isinstance(packet_reply, StartDataPacket):
-                data_length = struct.unpack('I', packet_reply.length)[0]
+            dataLength = 0
+            if isinstance(reply, StartDataPacket):
+                dataLength = reply.length
 
-                packet_reply = self.get_response_packet(session, request=packet)
-                data = packet_reply.data
-                while isinstance(packet_reply, DataPacket):
-                    data = data + packet_reply.data
-                    packet_reply = self.get_response_packet(session, request=packet)
+                reply = self.getResponse(session, request = packet)
+                data = reply.data
+                while isinstance(reply, DataPacket):
+                    data = data + reply.data
+                    reply = self.getResponse(session, request = packet)
 
-                if data_length == len(data):
-                    self.queue_object(DataObject(packet, data))
+                if dataLength == len(data):
+                    self.queueObject(DataObject(packet, data))
 
-                packet_reply = self.get_response_packet(session, request=packet)
+                reply = self.getResponse(session, request = packet)
             else:
-                packet_reply.ptp_cmd = packet.ptp_cmd
-                self.queue_object(DataObject(packet_reply, None))
+                reply.cmd = packet.cmd
+                self.queueObject(DataObject(reply, None))
 
         else:
-            self.send_packet(packet, session)
-            packet_reply = self.get_response_packet(session, request=packet)
+            self.sendPacket(packet, session)
+            reply = self.getResponse(session, request = packet)
 
-        return packet_reply
+        return reply
 
-    def send_event_req(self, packet: Packet, session):
+    def sendEventReq(self, packet: Packet, session):
         # add the session id of the object itself if it is not specified in the package
-        if packet.session_id is None:
-            packet.session_id = self.session_id
+        if packet.sessionId is None:
+            packet.sessionId = self.sessionId
 
-        self.send_packet(packet, session)
+        self.sendPacket(packet, session)
 
-    def send_data(self, data, session):
-        session.send(struct.pack('I', len(data) + 4) + data)
+    def sendData(self, data, session):
+        session.send(
+            StreamWriter() \
+                .writeUint32(len(data) + 4) \
+                .writeBytes(data) \
+                .data
+        )
 
-    def send_packet(self, packet, session):
+    def sendPacket(self, packet, session):
         print('---- SEND ----')
-        print('CmdType: ' + str(struct.unpack('I', packet.cmdtype)[0]))
-        self.send_data(packet.data(), session)
+        print('CmdType: ' + str(packet.cmdtype))
+        self.sendData(packet.data(), session)
+        print('---- End SEND ----')
 
-    def receive_data(self, session):
-        data = session.recv(4)
-        (data_length,) = struct.unpack('I', data)
-        # print("RECV Data length: " + str(data_length))
-        while data_length > len(data):
-            data += session.recv(data_length - len(data))
-        return data[4:]
+    def receiveData(self, session):
+        reader = StreamReader(data = session.recv(4))
+        dataLength = reader.readUint32()
+        print("RECV Data length: " + str(dataLength))
+        while dataLength > len(reader.data):
+            reader.data += session.recv(dataLength - len(reader.data))
 
-    def get_response_packet(self, session, request: Packet = None):
+        return reader.readRest()
+
+    def getResponse(self, session, request: Packet = None):
         response = PacketFactory.createPacket(
-            data=self.receive_data(session),
-            request=request
+            data = self.receiveData(session),
+            request = request
         )
 
         print('---- RECV ----')
-        print('CmdType: ' + str(struct.unpack('I', response.cmdtype)[0]))
+        print('CmdType: ' + str(response.cmdtype))
 
         return response

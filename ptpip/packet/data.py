@@ -1,6 +1,7 @@
 import struct
 
 from .packet import Packet
+from .stream_reader import StreamReader
 
 class DataPacket(Packet):
     def __init__(self, data = None, request: Packet = None):
@@ -10,11 +11,12 @@ class DataPacket(Packet):
         self.request = request
 
         if data is not None:
-            self.transaction_id = data[0:4]
-            self.data = data[4:]
+            reader = StreamReader(data)
+            self.transactionId = reader.readUint32()
+            self.data = reader.data[reader.pos:]
 
     def __str__(self):
         return 'DataPacket: ' + "\n" \
             + "\t" + 'cmdtype: ' + str(self.cmdtype) + "\n" \
-            + "\t" + 'transaction_id: ' + str(self.transaction_id) + "\n" \
+            + "\t" + 'transactionId: ' + str(self.transactionId) + "\n" \
             + "\t" + 'data: ' + str(self.data) + "\n"

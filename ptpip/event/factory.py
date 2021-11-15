@@ -13,22 +13,22 @@ class EventFactory():
         self.events = []
 
         # get the amount of events passed from the data passed to the factory
-        amount_of_events = struct.unpack('H', data[0:2])[0]
+        nbEvents = struct.unpack('H', data[0:2])[0]
 
         # set an counter and an offset of 2 as the first two bytes are already processed
         counter = 1
         offset = 2
-        while counter <= amount_of_events:
+        while counter <= nbEvents:
             # get the event_type which consists of two bytes
-            event_type = str(struct.unpack('H', data[offset:offset+2])[0])
+            eventType = str(struct.unpack('H', data[offset:offset + 2])[0])
 
             # get the event_parameter which consists of 4 bytes
-            event_parameter = str(struct.unpack('I', data[offset+2:offset+6])[0])
-            self.events.append(Event(event_type, event_parameter))
+            param = str(struct.unpack('I', data[offset + 2:offset + 6])[0])
+            self.events.append(Event(eventType, param))
 
             # increase the offset by 6 to get to the next event_type and event_parameter pair
             offset = offset + 6
             counter = counter + 1
 
-    def get_events(self):
+    def getEvents(self):
         return self.events

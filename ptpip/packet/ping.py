@@ -1,16 +1,19 @@
 import struct
 
 from .packet import Packet
+from .stream_writer import StreamWriter
 
 class Ping(Packet):
     def __init__(self, data = None):
         super(Ping, self).__init__()
 
-        self.cmdtype = struct.pack('I', 0x13)
+        self.cmdtype = 13
         self.data = data
 
     def data(self):
-        return self.cmdtype
+        return StreamWriter() \
+            .writeUint32(self.cmdtype) \
+            .data
 
     def __str__(self):
         return 'Ping: ' + "\n" \

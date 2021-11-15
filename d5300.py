@@ -4,6 +4,7 @@ from PIL import Image
 
 from ptpip.constants.cmd_type import CmdType
 from ptpip.constants.event_type import EventType
+from ptpip.constants.property_type import PropertyType
 
 from ptpip.constants.device.property_type import DevicePropertyType
 from ptpip.constants.device.exposure_time import ExposureTime
@@ -14,24 +15,19 @@ from ptpip.packet.cmd_request import CmdRequest
 from ptpip.report.html_device import HtmlDeviceReportGenerator
 
 async def usePtpIpClient(client: PtpIpClient):
-    # create a PTP/IP command request device info and add it to the queue of the PTP/IP connection object
-    # ptpip_cmd = CmdRequest(transaction_id=1, cmd=CmdType.GetDeviceInfo.value)
-    # ptpip_packet = conn.send_ptpip_cmd(ptpip_cmd)
-
-    device = await client.get_device_info()
+    device = await client.getDeviceInfo()
     # print('Device: ' + str(device))
 
     props = []
     for idx, prop in enumerate(device.properties):
-        prop_desc = await client.get_device_prop_desc(
-            prop=prop,
-            transaction_id=0x100 | idx,
-            delay=0
+        propDesc = await client.getDevicePropDesc(
+            prop = prop,
+            delay = 0
         )
-        props.append(prop_desc)
-            # print('Prop desc(' + str(idx) + '):' + "\n" + str(prop_desc))
+        props.append(propDesc)
+        # print('Prop desc(' + str(idx) + '):' + "\n" + str(propDesc))
 
-    discoveredProps = await client.discover_device_prop_desc(device, delay=0)
+    discoveredProps = await client.discoverDevicePropDesc(device, delay = 0)
     # print(str(discoveredProps))
 
     html = HtmlDeviceReportGenerator(device, props, discoveredProps) \
@@ -45,52 +41,59 @@ async def usePtpIpClient(client: PtpIpClient):
     print('Report saved ! ' + reportFileName)
 
     """
-    picture_control_capabilities = await conn.get_picture_control_capabilities(
-        transaction_id = 0xFFF
+    setExposureIndexResponse = await client.setDevicePropValue(
+        prop = DevicePropertyType.ExposureIndex.value,
+        propType = PropertyType.Uint16,
+        value = 3200
     )
+
+    print('setExposureIndexResponse: ' + str(setExposureIndexResponse))
+    """
+
+    exposureIndex = await client.getDevicePropValue(
+        prop = DevicePropertyType.ExposureIndex.value,
+        propType = PropertyType.Uint16
+    )
+
+    print('Exposure index : ' + str(exposureIndex))
+
+    """
+    pictureControlCapabilities = await client.getPictureControlCapabilities()
     """
 
     """
-    conn.set_device_prop_desc(
-        prop=DevicePropertyType.ExposureIndex.value,
-        value="1600",
-        transaction_id=0x1000 | idx
-    )
 
-    conn.set_device_prop_desc(
-        prop=DevicePropertyType.ExposureTime.value,
-        value=ExposureTime.OneOver4000.value,
-        transaction_id=0x1000 | idx
+    client.setDevicePropDesc(
+        prop = DevicePropertyType.ExposureTime.value,
+        value = ExposureTime.OneOver4000.value
     )
     """
 
     """
     # create a PTP/IP command request object and add it to the queue of the PTP/IP connection object
-    ptpip_cmd = CmdRequest(
-        transaction_id = 2,
-        cmd=CmdType.InitiateCaptureRecInMedia.value,
+    cmd = CmdRequest(
+        transactionId = 2,
+        cmd = CmdType.InitiateCaptureRecInMedia.value,
         param1 = 0xffffffff,
         param2 = 0x0000
     )
-    ptpip_packet = conn.send_cmd(ptpip_cmd)
+    packet = client.sendCmd(cmd)
 
-    # get the events from the camera, they will be stored in the event_queue of the ptpip object
-    ptpip_cmd = CmdRequest(
-        transaction_id=3,
-        cmd=CmdType.GetEvent.value
+    # get the events from the camera, they will be stored in the eventQueue of the ptpip object
+    cmd = CmdRequest(
+        cmd = CmdType.GetEvent.value
     )
-    ptpip_packet = conn.send_ptpip_cmd(ptpip_cmd)
+    packet = client.sendCmd(cmd)
 
     # query the events for the event you are looking for, for example the 0x4002 ObjectAdded if you look
     # for a image captured
-    for event in conn.event_queue:
-        if event.event_type == EventType.ObjectAdded.value:
-            ptpip_cmd = CmdRequest(
-                transaction_id=4,
-                cmd=CmdType.GetObject.value,
-                param1=event.event_parameter
+    for event in client.conn.eventQueue:
+        if event.eventType == EventType.ObjectAdded.value:
+            cmd = CmdRequest(
+                cmd = CmdType.GetObject.value,
+                param1 = event.parameter
             )
-            ptpip_packet = conn.send_ptpip_cmd(ptpip_cmd)
+            packet = client.sendCmd(cmd)
     """
 
 PtpIpClient(usePtpIpClient)

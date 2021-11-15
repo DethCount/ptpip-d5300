@@ -1,20 +1,22 @@
 import struct
 
 from .packet import Packet
+from .stream_reader import StreamReader
 
 class StartDataPacket(Packet):
     def __init__(self, data = None, request: Packet = None):
         super(StartDataPacket, self).__init__()
 
-        self.cmdtype = struct.pack('I', 0x09)
+        self.cmdtype = 9
         self.request = request
 
         if data is not None:
-            self.transaction_id = data[0:4]
-            self.length = data[4:8]
+            reader = StreamReader(data = data)
+            self.transactionId = reader.readUint32()
+            self.length = reader.readUint32()
 
     def __str__(self):
         return 'StartDataPacket: ' + "\n" \
             + "\t" + 'cmdtype: ' + str(self.cmdtype) + "\n" \
-            + "\t" + 'transaction_id: ' + str(self.transaction_id) + "\n" \
+            + "\t" + 'transactionId: ' + str(self.transactionId) + "\n" \
             + "\t" + 'length: ' + str(self.length) + "\n"

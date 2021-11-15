@@ -1,6 +1,7 @@
 import struct
 
 from .packet import Packet
+from .stream_reader import StreamReader
 
 from .init_cmd_req import InitCmdReq
 from .init_cmd_ack import InitCmdAck
@@ -19,44 +20,46 @@ class PacketFactory():
         if data is None:
             return None
 
-        cmdtype = struct.unpack('I', data[0:4])[0]
+        reader = StreamReader(data = data)
+
+        cmdtype = reader.readUint32()
 
         if cmdtype == 1:
-            print("InitCmdReq")
-            return InitCmdReq(data[4:])
+            # print("InitCmdReq")
+            return InitCmdReq(reader.readRest())
         elif cmdtype == 2:
-            print("InitCmdAck")
-            return InitCmdAck(data[4:])
+            # print("InitCmdAck")
+            return InitCmdAck(reader.readRest())
         elif cmdtype == 3:
-            print("EventReq")
-            return EventReq(data[4:])
+            # print("EventReq")
+            return EventReq(reader.readRest())
         elif cmdtype == 4:
-            print("EventAck")
-            return EventAck(data[4:], request=request)
+            # print("EventAck")
+            return EventAck(reader.readRest(), request = request)
         elif cmdtype == 5:
-            print("InitFail")
-            return InitFail(data[4:])
+            # print("InitFail")
+            return InitFail(reader.readRest())
         elif cmdtype == 6:
-            print("CmdRequest")
-            return CmdRequest(data[4:])
+            # print("CmdRequest")
+            return CmdRequest(reader.readRest())
         elif cmdtype == 7:
-            print("CmdResponse")
-            return CmdResponse(data[4:], request=request)
+            # print("CmdResponse")
+            return CmdResponse(reader.readRest(), request = request)
         elif cmdtype == 9:
-            print("StartDataPacket")
-            return StartDataPacket(data[4:], request=request)
+            # print("StartDataPacket")
+            return StartDataPacket(reader.readRest(), request = request)
         elif cmdtype == 10:
-            print("DataPacket")
-            return DataPacket(data[4:], request=request)
+            # print("DataPacket")
+            return DataPacket(reader.readRest(), request = request)
         elif cmdtype == 12:
-            print("EndDataPacket")
-            return EndDataPacket(data[4:], request=request)
+            # print("EndDataPacket")
+            return EndDataPacket(reader.readRest(), request = request)
         elif cmdtype == 13:
-            print("Ping")
-            return Ping(data[4:])
-        elif cmdtype == 14:
-            print("GetDeviceInfo")
+            # print("Ping")
+            return Ping(reader.readRest())
+        # elif cmdtype == 14:
+            # print("GetDeviceInfo")
         else:
-            print("Unknown")
+            print("Unknown cmdtype: " + str(cmdtype))
 
         return None

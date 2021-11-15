@@ -3,24 +3,30 @@ import struct
 import uuid
 
 from .packet import Packet
+from .stream_reader import StreamReader
+from .stream_writer import StreamWriter
 
 class InitCmdReq(Packet):
     def __init__(self, data = None):
         super(InitCmdReq, self).__init__()
 
-        self.cmdtype = struct.pack('I', 0x01)
+        self.cmdtype = 1
 
         if data is None:
-            guid = uuid.uuid4()
-            self.guid = guid.bytes
+            self.guid = uuid.uuid4().bytes
             self.hostname = socket.gethostname() + '\x00'
             self.hostname = self.hostname.encode()
         else:
-            self.guid = data[0:16]
-            self.hostname = data[16:0]
+            reader = StreamReader(data = data)
+            self.guid = reader.readBytes(16)
+            self.hostname = reader.readString()
 
     def data(self):
-        return self.cmdtype + self.guid + self.hostname
+        return StreamWriter() \
+            .writeUint32(self.cmdtype) \
+            .writeBytes(self.guid) \
+            .writeBytes(self.hostname) \
+            .data
 
     def __str__(self):
         return 'InitCmdReq: ' + "\n" \

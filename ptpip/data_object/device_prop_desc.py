@@ -56,6 +56,7 @@ from ptpip.constants.device.white_balance import WhiteBalance
 from ptpip.constants.property_type import PropertyType
 from ptpip.constants.property_type_mutation import PropertyTypeMutation
 
+from ptpip.packet.stream_reader import StreamReader
 from ptpip.data_object import DataObject
 
 class DevicePropDesc():
@@ -66,43 +67,43 @@ class DevicePropDesc():
         if data == None:
             return
 
-        pos = 0
-        (self.type_id, pos) = DataObject.ParseUint16(data, pos)
-        self.type = DevicePropertyType(self.type_id) \
-            if self.type_id in DevicePropertyType._value2member_map_ \
+        reader = StreamReader(data = data)
+
+        self.typeId = reader.readUint16()
+        self.type = DevicePropertyType(self.typeId) \
+            if self.typeId in DevicePropertyType._value2member_map_ \
             else None
 
-        (self.prop_type_id, pos) = DataObject.ParseUint16(data, pos)
-        self.prop_type = PropertyType(self.prop_type_id) \
-            if self.prop_type_id in PropertyType._value2member_map_ \
+        self.propTypeId = reader.readUint16()
+        self.propType = PropertyType(self.propTypeId) \
+            if self.propTypeId in PropertyType._value2member_map_ \
             else None
 
-        (self.mode, pos) = DataObject.ParseUint8(data, pos)
-        self.mode = ReadMode(self.mode)
+        self.mode = ReadMode(reader.readUint8())
 
-        if self.prop_type == None:
+        if self.propType == None:
             return
 
-        (self.default_value, pos) = DataObject.ParseType(self.prop_type.name, data, pos)
-        (self.value, pos) = DataObject.ParseType(self.prop_type.name, data, pos)
+        self.defaultValue = reader.readType(self.propType.name)
+        self.value = reader.readType(self.propType.name)
 
-        self.mutation = None
+        self.mutation = PropertyTypeMutation(reader.readUint8())
 
-        (self.mutation, pos) = DataObject.ParseUint8(data, pos)
-        self.mutation = PropertyTypeMutation(self.mutation)
-
-        self.min_value = None
-        self.max_value = None
+        self.minValue = None
+        self.maxValue = None
         self.step = None
         self.values = None
 
         try:
             if self.mutation == PropertyTypeMutation.Range:
-                (self.min_value, pos) = DataObject.ParseType(self.prop_type.name, data, pos)
-                (self.max_value, pos) = DataObject.ParseType(self.prop_type.name, data, pos)
-                (self.step, pos) = DataObject.ParseType(self.prop_type.name, data, pos)
+                self.minValue = reader.readType(self.propType.name)
+                self.maxValue = reader.readType(self.propType.name)
+                self.step = reader.readType(self.propType.name)
             elif self.mutation == PropertyTypeMutation.Enumeration:
-                (self.values, pos) = DataObject.ParseArray(self.prop_type.name, data, pos, 'Uint16')
+                self.values = reader.readArray(
+                    self.propType.name,
+                    lengthTypeName = PropertyType.Uint16.name
+                )
         except Exception as e:
             print(str(e))
 
@@ -398,9 +399,13 @@ class DevicePropDesc():
     def __str__(self):
         sMutation = ''
         if self.mutation == PropertyTypeMutation.Range:
-            if self.min_value != 0 and self.max_value != 0:
-                sMutation += "\t" + 'min_value: ' + self.propertyValueStr(self.min_value) + "\n" \
-                    + "\t" + 'max_value: ' + self.propertyValueStr(self.max_value) + "\n"
+            if self.minValue != 0 and self.maxValue != 0:
+                sMutation += "\t" \
+                    + 'min_value: ' \
+                        + self.propertyValueStr(self.minValue) + "\n" \
+                    + "\t" \
+                    + 'max_value: ' \
+                        + self.propertyValueStr(self.maxValue) + "\n"
 
             if self.step != 1:
                 sMutation += "\t" + 'step: ' + str(self.step) + "\n"
@@ -412,12 +417,14 @@ class DevicePropDesc():
             sMutation = "\t" + 'values: ' + str(sValues) + "\n"
 
         return 'DevicePropDesc: ' + "\n" \
-            + "\t" + 'type_id: ' + str(self.type_id) + "\n" \
+            + "\t" + 'typeId: ' + str(self.typeId) + "\n" \
             + "\t" + 'type: ' + str(self.type) + "\n" \
-            + "\t" + 'prop_type_id: ' + str(self.prop_type_id) + "\n" \
-            + "\t" + 'prop_type: ' + str(self.prop_type) + "\n" \
+            + "\t" + 'propTypeId: ' + str(self.propTypeId) + "\n" \
+            + "\t" + 'propType: ' + str(self.propType) + "\n" \
             + "\t" + 'mode: ' + str(self.mode.name) + "\n" \
-            + "\t" + 'default_value: ' + self.propertyValueStr(self.default_value) + "\n" \
-            + "\t" + 'value: ' + self.propertyValueStr(self.value) + "\n" \
+            + "\t" + 'defaultValue: ' \
+                + self.propertyValueStr(self.defaultValue) + "\n" \
+            + "\t" + 'value: ' \
+                + self.propertyValueStr(self.value) + "\n" \
             + "\t" + 'mutation: ' + str(self.mutation) + "\n" \
             + sMutation

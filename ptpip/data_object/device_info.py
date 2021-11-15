@@ -6,6 +6,7 @@ from ptpip.constants.device.property_type import DevicePropertyType
 from ptpip.constants.device.functional_mode import FunctionalMode
 from ptpip.constants.device.vendor_extension import VendorExtension
 
+from ptpip.packet.stream_reader import StreamReader
 from .data_object import DataObject
 
 class DeviceInfo():
@@ -13,20 +14,21 @@ class DeviceInfo():
         super(DeviceInfo, self).__init__()
         self.packet = packet
 
-        (self.standardVersion, pos) = DataObject.ParseUint16(data, 0)
-        (self.vendorExtensionId, pos) = DataObject.ParseUint32(data, pos)
-        (self.vendorExtensionVersion, pos) = DataObject.ParseUint16(data, pos)
-        (self.vendorExtensionDesc, pos) = DataObject.ParseString(data, pos)
-        (self.functionalMode, pos) = DataObject.ParseUint16(data, pos)
-        (self.operations, pos) = DataObject.ParseArray('Uint16', data, pos)
-        (self.events, pos) = DataObject.ParseArray('Uint16', data, pos)
-        (self.properties, pos) = DataObject.ParseArray('Uint16', data, pos)
-        (self.captureFormats, pos) = DataObject.ParseArray('Uint16', data, pos)
-        (self.imageFormats, pos) = DataObject.ParseArray('Uint16', data, pos)
-        (self.manufacturer, pos) = DataObject.ParseString(data, pos)
-        (self.model, pos) = DataObject.ParseString(data, pos)
-        (self.deviceVersion, pos) = DataObject.ParseString(data, pos)
-        (self.serialNumber, pos) = DataObject.ParseString(data, pos)
+        reader = StreamReader(data = data)
+        self.standardVersion        = reader.readUint16()
+        self.vendorExtensionId      = reader.readUint32()
+        self.vendorExtensionVersion = reader.readUint16()
+        self.vendorExtensionDesc    = reader.readString()
+        self.functionalMode         = reader.readUint16()
+        self.operations             = reader.readUint16Array()
+        self.events                 = reader.readUint16Array()
+        self.properties             = reader.readUint16Array()
+        self.captureFormats         = reader.readUint16Array()
+        self.imageFormats           = reader.readUint16Array()
+        self.manufacturer           = reader.readString()
+        self.model                  = reader.readString()
+        self.deviceVersion          = reader.readString()
+        self.serialNumber           = reader.readString()
 
     def vendorExtensionIdStr(self):
         return VendorExtension(self.vendorExtensionId).name \
