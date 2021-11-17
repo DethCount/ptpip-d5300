@@ -1,6 +1,13 @@
 # Getting started
 
+[pip package](https://pypi.org/project/ptpip/)
+
+```
+pip install ptpip
+```
+
 [d5300 sample file](https://github.com/DethCount/ptpip-d5300/blob/master/d5300.py)
+
 ```
 from ptpip.client import PtpIpClient
 from ptpip.report.html_device import HtmlDeviceReportGenerator
