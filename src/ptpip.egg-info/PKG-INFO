@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: ptpip
-Version: 0.0.4
+Version: 0.0.5
 Summary: PTP / IP client
 Home-page: https://github.com/dethcount/d5300-ptpip
 Author: Dethcount
@@ -17,24 +17,29 @@ License-File: LICENSE
 
 # Getting started
 
-```
-import asyncio
+[pip package](https://pypi.org/project/ptpip/)
 
+```
+pip install ptpip
+```
+
+[d5300 sample file](https://github.com/DethCount/ptpip-d5300/blob/master/d5300.py)
+
+```
 from ptpip.client import PtpIpClient
 from ptpip.report.html_device import HtmlDeviceReportGenerator
 
 async def usePtpIpClient(client: PtpIpClient):
-    device = await client.get_device_info()
+    device = await client.getDeviceInfo()
     props = []
     for idx, prop in enumerate(device.properties):
-        prop_desc = await client.get_device_prop_desc(
+        prop_desc = await client.getDevicePropDesc(
             prop=prop,
-            transaction_id=0x100 | idx,
             delay=0
         )
         props.append(prop_desc)
 
-    discoveredProps = await client.discover_device_prop_desc(device, delay=0)
+    discoveredProps = await client.discoverDevicePropDesc(device, delay=0)
 
     html = HtmlDeviceReportGenerator(device, props, discoveredProps) \
         .generate()
@@ -45,6 +50,21 @@ async def usePtpIpClient(client: PtpIpClient):
     f.close()
 
     print('Report saved ! ' + reportFileName)
+
+    setExposureIndexResponse = await client.setDevicePropValue(
+        prop = DevicePropertyType.ExposureIndex.value,
+        propType = PropertyType.Uint16,
+        value = 3200
+    )
+
+    print('setExposureIndexResponse: ' + str(setExposureIndexResponse))
+
+    exposureIndex = await client.getDevicePropValue(
+        prop = DevicePropertyType.ExposureIndex.value,
+        propType = PropertyType.Uint16
+    )
+
+    print('Exposure index : ' + str(exposureIndex))
 
 PtpIpClient(usePtpIpClient)
 
