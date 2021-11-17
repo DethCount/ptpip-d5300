@@ -27,7 +27,7 @@ async def usePtpIpClient(client: PtpIpClient):
         props.append(propDesc)
         # print('Prop desc(' + str(idx) + '):' + "\n" + str(propDesc))
 
-    discoveredProps = await client.discoverDevicePropDesc(device, delay = 0)
+    discoveredProps = await client.discoverDevicePropDesc(device, delay = 0.010)
     # print(str(discoveredProps))
 
     html = HtmlDeviceReportGenerator(device, props, discoveredProps) \
@@ -40,7 +40,6 @@ async def usePtpIpClient(client: PtpIpClient):
 
     print('Report saved ! ' + reportFileName)
 
-    """
     setExposureIndexResponse = await client.setDevicePropValue(
         prop = DevicePropertyType.ExposureIndex.value,
         propType = PropertyType.Uint16,
@@ -48,7 +47,6 @@ async def usePtpIpClient(client: PtpIpClient):
     )
 
     print('setExposureIndexResponse: ' + str(setExposureIndexResponse))
-    """
 
     exposureIndex = await client.getDevicePropValue(
         prop = DevicePropertyType.ExposureIndex.value,

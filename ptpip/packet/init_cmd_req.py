@@ -2,15 +2,29 @@ import socket
 import struct
 import uuid
 
+from ptpip.constants.data_object_transfer_mode import DataObjectTransferMode
+
+from ptpip.data_object.data_object import DataObject
+
 from .packet import Packet
 from .stream_reader import StreamReader
 from .stream_writer import StreamWriter
 
 class InitCmdReq(Packet):
-    def __init__(self, data = None):
-        super(InitCmdReq, self).__init__()
-
-        self.cmdtype = 1
+    def __init__(
+        self,
+        data = None,
+        transactionId = None,
+        dataObject: DataObject = None,
+        dataObjectTransferMode: DataObjectTransferMode = None
+    ):
+        super(InitCmdReq, self).__init__(
+            1,
+            data = data,
+            transactionId = transactionId,
+            dataObject = dataObject,
+            dataObjectTransferMode = dataObjectTransferMode
+        )
 
         if data is None:
             self.guid = uuid.uuid4().bytes
@@ -21,7 +35,7 @@ class InitCmdReq(Packet):
             self.guid = reader.readBytes(16)
             self.hostname = reader.readString()
 
-    def data(self):
+    def pack(self):
         return StreamWriter() \
             .writeUint32(self.cmdtype) \
             .writeBytes(self.guid) \

@@ -1,13 +1,33 @@
 import struct
 
+from ptpip.constants.data_object_transfer_mode import DataObjectTransferMode
+
+from ptpip.data_object.data_object import DataObject
+
 from .packet import Packet
 from .stream_reader import StreamReader
 
 class InitCmdAck(Packet):
-    def __init__(self, data = None):
-        super(InitCmdAck, self).__init__()
+    def __init__(
+        self,
+        data = None,
+        transactionId = None,
+        dataObject: DataObject = None,
+        dataObjectTransferMode: DataObjectTransferMode = None,
+        sessionId = None
+    ):
+        super(InitCmdAck, self).__init__(
+            2,
+            data = data,
+            transactionId = transactionId,
+            dataObject = dataObject,
+            dataObjectTransferMode = dataObjectTransferMode
+        )
 
-        self.cmdtype = 2
+        self.sessionId = sessionId
+        self.guid = None
+        self.hostname = None
+
         if data is not None:
             reader = StreamReader(data = data)
             self.sessionId = reader.readUint32()

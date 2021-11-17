@@ -7,6 +7,7 @@ from ptpip.constants.cmd_type import CmdType
 from ptpip.constants.property_type import PropertyType
 from ptpip.constants.response_code import ResponseCode
 from ptpip.constants.device.property_type import DevicePropertyType
+from ptpip.constants.data_object_transfer_mode import DataObjectTransferMode
 
 from ptpip.data_object.data_object import DataObject
 from ptpip.data_object.device_info import DeviceInfo
@@ -22,6 +23,7 @@ from ptpip.packet.cmd_request import CmdRequest
 from ptpip.packet.cmd_response import CmdResponse
 from ptpip.packet.start_data import StartDataPacket
 from ptpip.packet.data import DataPacket
+from ptpip.packet.end_data import EndDataPacket
 from ptpip.packet.init_cmd_ack import InitCmdAck
 from ptpip.packet.init_cmd_req import InitCmdReq
 from ptpip.packet.event_req import EventReq
@@ -63,7 +65,6 @@ class Connection():
         self.sendReceivePacket(cmd, self.session)
 
     def communicationThread(self, delay = 0):
-        print('Communication: ' + str(type(delay)) + ' ' + str(delay))
         while True:
             if len(self.cmdQueue) == 0:
                 # do a ping receive a pong (same as ping) as reply to keep the connection alive
@@ -79,41 +80,47 @@ class Connection():
             else:
                 cmd = self.cmdQueue.pop()
                 reply = self.sendReceivePacket(cmd, self.session)
-                if reply.responseCode != ResponseCode.OK.value \
-                    and reply.responseCode != ResponseCode.DeviceBusy.value \
+                if reply.code != ResponseCode.OK.value \
+                    and reply.code != ResponseCode.DeviceBusy.value \
                 :
-                    print("CCC Cmd reply is: " + str(reply.responseCode))
+                    print("CCC Cmd reply is: " + str(reply.code))
 
             time.sleep(delay)
+        print(str('End of communication'))
 
     def queueObject(self, dataObject):
-        cmdtype = dataObject.packet.cmd
-        transactionId = dataObject.packet.transactionId
+        if not isinstance(dataObject.packet, CmdRequest):
+            self.objectQueue.append(dataObject)
+            return
 
-        sCmdType = CmdType(cmdtype).name \
-            if cmdtype in CmdType._value2member_map_ \
-            else str(cmdtype)
-
-        print('OOO Response to ' + sCmdType + ', transactionId: ' + str(transactionId))
-
-        if cmdtype == CmdType.GetDeviceInfo.value:
+        if dataObject.packet.cmd == CmdType.GetDeviceInfo.value:
             device = DeviceInfo(dataObject.packet, dataObject.data)
             self.objectQueue.append(device)
-            # print('OOO DeviceInfo')
-        elif cmdtype == CmdType.GetObject.value:
+            return
+
+        if dataObject.packet.cmd == CmdType.GetObject.value:
             dataStream = io.BytesIO(dataObject.data)
             img = Image.open(dataStream)
-            # print('OOO Image')
             self.objectQueue.append(img)
-        elif cmdtype == CmdType.GetDevicePropDesc.value \
+            return
+
+        if dataObject.packet.cmd == CmdType.GetEvent.value:
+            events = EventFactory(dataObject.data).getEvents()
+
+            for event in events:
+                self.eventQueue.append(event)
+
+            return
+
+        if dataObject.packet.cmd == CmdType.GetDevicePropDesc.value \
             and dataObject.data != None \
         :
             devicePropDesc = DevicePropDesc(dataObject.packet, dataObject.data)
-            # print(str(devicePropDesc))
             self.objectQueue.append(devicePropDesc)
-        else:
-            print('OOO Ignored: ' + sCmdType)
-            self.objectQueue.append(dataObject)
+
+            return
+
+        self.objectQueue.append(dataObject)
 
     async def listenObjectDataQueue(self, delay = 0):
         while True:
@@ -146,58 +153,53 @@ class Connection():
         return s
 
     def sendReceivePacket(self, packet: Packet, session):
-        if isinstance(packet, InitCmdReq):
-            self.sendPacket(packet, session)
-            reply = self.getResponse(session, request = packet)
+        print('sendReceivePacket: ' + str(packet))
+        if isinstance(packet, EventReq) and packet.sessionId is None:
+            packet.sessionId = self.sessionId
 
-            # set the session id of the object if the reply is of type InitCmdAck
-            if isinstance(reply, InitCmdAck):
-                self.sessionId = reply.sessionId
+        self.sendPacket(packet, session)
+        # print(str(packet.transactionId))
 
-        elif isinstance(packet, EventReq):
-            self.sendEventReq(packet, session)
-
-            reply = self.getResponse(session, request = packet)
-
-        elif isinstance(packet, CmdRequest) \
-            and packet.cmd == CmdType.GetEvent.value \
-        :
-            self.sendPacket(packet, session)
-            reply = self.getResponse(session, request = packet)
-
-            # download object data
-            if isinstance(reply, StartDataPacket):
-                dataLength = reply.length
-
-                reply = self.getResponse(session, request = packet)
-                data = reply.data
-                while isinstance(reply, DataPacket):
-                    data = data + reply.data
-                    reply = self.getResponse(session, request = packet)
-
-                if dataLength == len(data):
-                    events = EventFactory(data).getEvents()
-                    for event in events:
-                        self.eventQueue.append(event)
-            else:
-                self.queueObject(DataObject(reply, None))
-
-            reply = self.getResponse(session, request = packet)
-
-        elif isinstance(packet, CmdRequest) \
+        # send data object
+        if packet.dataObject != None \
             and (
-                packet.cmd == CmdType.GetObject.value
-                or packet.cmd == CmdType.GetDeviceInfo.value
-                or packet.cmd == CmdType.GetDevicePropDesc.value
-                or packet.cmd == CmdType.GetDevicePropValue.value
-                or packet.cmd == CmdType.SetDevicePropValue.value
-                or packet.cmd == CmdType.GetPicCtrlCapability.value
-                or packet.cmd == CmdType.GetPicCtrlData.value
-            ):
-            self.sendPacket(packet, session)
-            print(str(packet.transactionId))
-            reply = self.getResponse(session)
+                packet.dataObjectTransferMode
+                    == DataObjectTransferMode.Send
+                or packet.dataObjectTransferMode
+                    == DataObjectTransferMode.SendAndReceive
+            ) \
+        :
+            self.sendPacket(
+                StartDataPacket(
+                    transactionId = packet.transactionId,
+                    length = len(packet.dataObject.data)
+                ),
+                session
+            )
+            self.sendPacket(
+                DataPacket(
+                    content = packet.dataObject.data,
+                    transactionId = packet.transactionId
+                ),
+                session
+            )
+            self.sendPacket(
+                EndDataPacket(
+                    transactionId = packet.transactionId
+                ),
+                session
+            )
 
+        # receive response
+        reply = self.getResponse(session)
+
+        if isinstance(reply, InitCmdAck):
+            self.sessionId = reply.sessionId
+
+        # receive data object
+        if packet.dataObjectTransferMode \
+            != DataObjectTransferMode.NoTransfer \
+        :
             dataLength = 0
             if isinstance(reply, StartDataPacket):
                 dataLength = reply.length
@@ -205,20 +207,15 @@ class Connection():
                 reply = self.getResponse(session, request = packet)
                 data = reply.data
                 while isinstance(reply, DataPacket):
-                    data = data + reply.data
+                    data += reply.content
                     reply = self.getResponse(session, request = packet)
 
                 if dataLength == len(data):
-                    self.queueObject(DataObject(packet, data))
+                    self.queueObject(DataObject(packet, data = data))
 
                 reply = self.getResponse(session, request = packet)
             else:
-                reply.cmd = packet.cmd
-                self.queueObject(DataObject(reply, None))
-
-        else:
-            self.sendPacket(packet, session)
-            reply = self.getResponse(session, request = packet)
+                self.queueObject(DataObject(reply, data = None))
 
         return reply
 
@@ -240,7 +237,7 @@ class Connection():
     def sendPacket(self, packet, session):
         print('---- SEND ----')
         print('CmdType: ' + str(packet.cmdtype))
-        self.sendData(packet.data(), session)
+        self.sendData(packet.pack(), session)
         print('---- End SEND ----')
 
     def receiveData(self, session):
@@ -255,7 +252,8 @@ class Connection():
     def getResponse(self, session, request: Packet = None):
         response = PacketFactory.createPacket(
             data = self.receiveData(session),
-            request = request
+            request = request,
+            sessionId = self.sessionId
         )
 
         print('---- RECV ----')

@@ -2,6 +2,9 @@ import struct
 
 from ptpip.constants.cmd_type import CmdType
 from ptpip.constants.property_type import PropertyType
+from ptpip.constants.data_object_transfer_mode import DataObjectTransferMode
+
+from ptpip.data_object.data_object import DataObject
 
 from ptpip.packet import Packet
 from ptpip.packet.stream_writer import StreamWriter
@@ -11,6 +14,8 @@ class CmdRequest(Packet):
         self,
         transactionId = None,
         data = None,
+        dataObject: DataObject = None,
+        dataObjectTransferMode: DataObjectTransferMode = None,
         cmd = None,
         param1 = None,
         param2 = None,
@@ -23,10 +28,14 @@ class CmdRequest(Packet):
         paramType4: PropertyType = PropertyType.Uint32,
         paramType5: PropertyType = PropertyType.Uint32,
     ):
-        super(CmdRequest, self).__init__()
+        super(CmdRequest, self).__init__(
+            cmdtype = 6,
+            transactionId = transactionId,
+            data = data,
+            dataObject = dataObject,
+            dataObjectTransferMode = dataObjectTransferMode
+        )
 
-        self.cmdtype = 6
-        self.unkown = 1
         self.cmd = cmd
         self.param1 = param1
         self.param2 = param2
@@ -38,12 +47,11 @@ class CmdRequest(Packet):
         self.paramType3 = paramType3
         self.paramType4 = paramType4
         self.paramType5 = paramType5
-        self.transactionId = transactionId
 
-    def data(self):
+    def pack(self):
         writer = StreamWriter() \
             .writeUint32(self.cmdtype) \
-            .writeUint32(self.unkown) \
+            .writeUint32(self.dataObjectTransferMode.value) \
             .writeUint16(self.cmd) \
             .writeUint32(self.transactionId)
 
@@ -63,7 +71,7 @@ class CmdRequest(Packet):
     def __str__(self):
         return 'CmdRequest: ' + "\n" \
             + "\t" + 'cmdtype: ' + str(self.cmdtype) + "\n" \
-            + "\t" + 'unknown: ' + str(self.unkown) + "\n" \
+            + "\t" + 'dataObjectTransferMode: ' + str(self.dataObjectTransferMode.name) + "\n" \
             + "\t" + 'ptp_cmd: ' + str(self.cmd) + "\n" \
             + "\t" + 'param1: ' + str(self.param1) + "\n" \
             + "\t" + 'param2: ' + str(self.param2) + "\n" \

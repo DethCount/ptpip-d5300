@@ -1,14 +1,30 @@
 import struct
 
+from ptpip.constants.data_object_transfer_mode import DataObjectTransferMode
+
+from ptpip.data_object.data_object import DataObject
+
 from .packet import Packet
 from .stream_reader import StreamReader
 from .stream_writer import StreamWriter
 
 class EventReq(Packet):
-    def __init__(self, data = None, sessionId = None):
-        super(EventReq, self).__init__()
+    def __init__(
+        self,
+        data = None,
+        transactionId = None,
+        dataObject: DataObject = None,
+        dataObjectTransferMode: DataObjectTransferMode = None,
+        sessionId = None
+    ):
+        super(EventReq, self).__init__(
+            3,
+            data = data,
+            transactionId = transactionId,
+            dataObject = dataObject,
+            dataObjectTransferMode = dataObjectTransferMode
+        )
 
-        self.cmdtype = 3
         self.sessionId = None
 
         if data is not None:
@@ -17,7 +33,7 @@ class EventReq(Packet):
         elif sessionId is not None:
             self.sessionId = sessionId
 
-    def data(self):
+    def pack(self):
         return StreamWriter() \
             .writeUint32(self.cmdtype) \
             .writeUint32(self.sessionId) \

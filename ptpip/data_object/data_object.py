@@ -1,8 +1,13 @@
 import struct
 
 class DataObject():
-    def __init__(self, packet, data):
+    def __init__(
+        self,
+        packet = None,
+        data = None
+    ):
         super(DataObject, self).__init__()
+
         self.packet = packet
         self.data = data
 

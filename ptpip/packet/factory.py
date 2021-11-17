@@ -1,5 +1,9 @@
 import struct
 
+from ptpip.constants.data_object_transfer_mode import DataObjectTransferMode
+
+from ptpip.data_object.data_object import DataObject
+
 from .packet import Packet
 from .stream_reader import StreamReader
 
@@ -16,7 +20,14 @@ from .end_data import EndDataPacket
 from .ping import Ping
 
 class PacketFactory():
-    def createPacket(data = None, request: Packet = None):
+    def createPacket(
+        data = None,
+        transactionId = None,
+        dataObject: DataObject = None,
+        dataObjectTransferMode: DataObjectTransferMode = None,
+        request: Packet = None,
+        sessionId = None
+    ):
         if data is None:
             return None
 
@@ -26,37 +37,100 @@ class PacketFactory():
 
         if cmdtype == 1:
             # print("InitCmdReq")
-            return InitCmdReq(reader.readRest())
+            return InitCmdReq(
+                data = reader.readRest(),
+                transactionId = transactionId,
+                dataObject = dataObject,
+                dataObjectTransferMode = dataObjectTransferMode
+            )
         elif cmdtype == 2:
             # print("InitCmdAck")
-            return InitCmdAck(reader.readRest())
+            return InitCmdAck(
+                data = reader.readRest(),
+                transactionId = transactionId,
+                dataObject = dataObject,
+                dataObjectTransferMode = dataObjectTransferMode,
+                sessionId = sessionId
+            )
         elif cmdtype == 3:
             # print("EventReq")
-            return EventReq(reader.readRest())
+            return EventReq(
+                data = reader.readRest(),
+                transactionId = transactionId,
+                dataObject = dataObject,
+                dataObjectTransferMode = dataObjectTransferMode,
+                sessionId = sessionId
+            )
         elif cmdtype == 4:
             # print("EventAck")
-            return EventAck(reader.readRest(), request = request)
+            return EventAck(
+                data = reader.readRest(),
+                transactionId = transactionId,
+                dataObject = dataObject,
+                dataObjectTransferMode = dataObjectTransferMode,
+                sessionId = sessionId,
+                request = request
+            )
         elif cmdtype == 5:
             # print("InitFail")
-            return InitFail(reader.readRest())
+            return InitFail(
+                data = reader.readRest(),
+                transactionId = transactionId,
+                dataObject = dataObject,
+                dataObjectTransferMode = dataObjectTransferMode
+            )
         elif cmdtype == 6:
             # print("CmdRequest")
-            return CmdRequest(reader.readRest())
+            return CmdRequest(
+                data = reader.readRest(),
+                transactionId = transactionId,
+                dataObject = dataObject,
+                dataObjectTransferMode = dataObjectTransferMode
+            )
         elif cmdtype == 7:
             # print("CmdResponse")
-            return CmdResponse(reader.readRest(), request = request)
+            return CmdResponse(
+                data = reader.readRest(),
+                transactionId = transactionId,
+                dataObject = dataObject,
+                dataObjectTransferMode = dataObjectTransferMode,
+                request = request
+            )
         elif cmdtype == 9:
             # print("StartDataPacket")
-            return StartDataPacket(reader.readRest(), request = request)
+            return StartDataPacket(
+                data = reader.readRest(),
+                transactionId = transactionId,
+                dataObject = dataObject,
+                dataObjectTransferMode = dataObjectTransferMode,
+                request = request
+            )
         elif cmdtype == 10:
             # print("DataPacket")
-            return DataPacket(reader.readRest(), request = request)
+            return DataPacket(
+                data = reader.readRest(),
+                transactionId = transactionId,
+                dataObject = dataObject,
+                dataObjectTransferMode = dataObjectTransferMode,
+                request = request
+            )
         elif cmdtype == 12:
             # print("EndDataPacket")
-            return EndDataPacket(reader.readRest(), request = request)
+            return EndDataPacket(
+                data = reader.readRest(),
+                transactionId = transactionId,
+                dataObject = dataObject,
+                dataObjectTransferMode = dataObjectTransferMode,
+                request = request
+            )
         elif cmdtype == 13:
             # print("Ping")
-            return Ping(reader.readRest())
+            return Ping(
+                data = reader.readRest(),
+                transactionId = transactionId,
+                dataObject = dataObject,
+                dataObjectTransferMode = dataObjectTransferMode
+            )
         # elif cmdtype == 14:
             # print("GetDeviceInfo")
         else:

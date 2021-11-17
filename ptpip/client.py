@@ -8,10 +8,12 @@ from ptpip.connection import Connection
 from ptpip.constants.cmd_type import CmdType
 from ptpip.constants.property_type import PropertyType
 from ptpip.constants.response_code import ResponseCode
+from ptpip.constants.data_object_transfer_mode import DataObjectTransferMode
 
 from ptpip.constants.device.property_type import DevicePropertyType
 
 from ptpip.packet.stream_reader import StreamReader
+from ptpip.packet.stream_writer import StreamWriter
 from ptpip.packet.cmd_request import CmdRequest
 from ptpip.packet.cmd_response import CmdResponse
 
@@ -35,7 +37,11 @@ class PtpIpClient():
         self.lastTransactionId = 2021;
 
         self.conn = Connection()
-        self.conn.open(self.host, self.port)
+        self.conn.open(
+            host = self.host,
+            port = self.port,
+            transactionId = self.lastTransactionId
+        )
 
         # Start the Thread which is constantly checking the status of the camera
         # and which is processing new command packages which should be send
@@ -74,8 +80,10 @@ class PtpIpClient():
                 self.conn.objectQueue.remove(objData)
                 if isinstance(objData, DeviceInfo):
                     return objData
-                elif isinstance(objData, DataObject):
-                    return ResponseCode(objData.packet.responseCode)
+                elif isinstance(objData, DataObject) \
+                    and isinstance(objData.packet, CmdResponse) \
+                :
+                    return objData.packet.code
                 else:
                     return None
 
@@ -128,8 +136,10 @@ class PtpIpClient():
                 self.conn.objectQueue.remove(objData)
                 if isinstance(objData, DevicePropDesc):
                     return objData
-                elif isinstance(objData, DataObject):
-                    return ResponseCode(objData.packet.responseCode)
+                elif isinstance(objData, DataObject) \
+                    and isinstance(objData.packet, CmdResponse) \
+                :
+                    return objData.packet.code
                 else:
                     return None
 
@@ -150,9 +160,12 @@ class PtpIpClient():
             transactionId = transactionId,
             cmd = CmdType.SetDevicePropValue.value,
             param1 = prop,
-            paramType1 = PropertyType.Uint32,
-            param2 = value,
-            paramType2 = propType
+            dataObjectTransferMode = DataObjectTransferMode.Send,
+            dataObject = DataObject(
+                data = StreamWriter() \
+                    .writeType(propType.name, value) \
+                    .data
+            )
         )
 
         self.conn.sendCmd(cmd)
@@ -162,10 +175,10 @@ class PtpIpClient():
                 self.conn.objectQueue.remove(objData)
                 if isinstance(objData, DataObject):
                     if isinstance(objData.packet, CmdResponse) \
-                        and objData.packet.responseCode \
+                        and objData.packet.code \
                             != ResponseCode.OK.value \
                     :
-                        return ResponseCode(objData.packet.responseCode)
+                        return objData.packet.code
                     return objData
                 else:
                     return None
@@ -195,10 +208,10 @@ class PtpIpClient():
                 self.conn.objectQueue.remove(objData)
                 if isinstance(objData, DataObject):
                     if isinstance(objData.packet, CmdResponse) \
-                        and objData.packet.responseCode \
+                        and objData.packet.code \
                             != ResponseCode.OK.value \
                     :
-                        return ResponseCode(objData.packet.responseCode)
+                        return objData.packet.code
                     return StreamReader(objData.data) \
                         .readType(propType.name)
                 else:

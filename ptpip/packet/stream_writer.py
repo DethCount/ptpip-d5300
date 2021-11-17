@@ -141,4 +141,5 @@ class StreamWriter():
         if typeName == PropertyType.Uint64Array.name:
             return self.writeUint64Array(value)
 
+        print('Unknown type: ' + str(typeName))
         return self
