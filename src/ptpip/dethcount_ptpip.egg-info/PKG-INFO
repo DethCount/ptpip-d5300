@@ -1,21 +1,40 @@
+Metadata-Version: 2.1
+Name: dethcount-ptpip
+Version: 0.0.1
+Summary: PTP / IP client
+Home-page: https://github.com/dethcount/d5300-ptpip
+Author: Dethcount
+Author-email: count.msn@gmail.com
+License: UNKNOWN
+Project-URL: Bug Tracker, https://github.com/dethcount/ptpip/issues
+Platform: UNKNOWN
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.6
+Description-Content-Type: text/markdown
+License-File: LICENSE
+
 # Getting started
 
-[d5300 sample file](https://github.com/DethCount/ptpip-d5300/blob/master/d5300.py)
 ```
+import asyncio
+
 from ptpip.client import PtpIpClient
 from ptpip.report.html_device import HtmlDeviceReportGenerator
 
 async def usePtpIpClient(client: PtpIpClient):
-    device = await client.getDeviceInfo()
+    device = await client.get_device_info()
     props = []
     for idx, prop in enumerate(device.properties):
-        prop_desc = await client.getDevicePropDesc(
+        prop_desc = await client.get_device_prop_desc(
             prop=prop,
+            transaction_id=0x100 | idx,
             delay=0
         )
         props.append(prop_desc)
 
-    discoveredProps = await client.discoverDevicePropDesc(device, delay=0)
+    discoveredProps = await client.discover_device_prop_desc(device, delay=0)
 
     html = HtmlDeviceReportGenerator(device, props, discoveredProps) \
         .generate()
@@ -26,21 +45,6 @@ async def usePtpIpClient(client: PtpIpClient):
     f.close()
 
     print('Report saved ! ' + reportFileName)
-
-    setExposureIndexResponse = await client.setDevicePropValue(
-        prop = DevicePropertyType.ExposureIndex.value,
-        propType = PropertyType.Uint16,
-        value = 3200
-    )
-
-    print('setExposureIndexResponse: ' + str(setExposureIndexResponse))
-
-    exposureIndex = await client.getDevicePropValue(
-        prop = DevicePropertyType.ExposureIndex.value,
-        propType = PropertyType.Uint16
-    )
-
-    print('Exposure index : ' + str(exposureIndex))
 
 PtpIpClient(usePtpIpClient)
 
@@ -60,3 +64,5 @@ https://api.ricoh/docs/theta-web-api/property/still_capture_mode/ \
 https://manualzz.com/download/46005016 D5000 MTP Specifications \
 https://www.usb.org/sites/default/files/MTPv1_1.zip \
 https://github.com/gphoto/libgphoto2/
+
+
