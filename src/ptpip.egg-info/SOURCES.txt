@@ -9,12 +9,19 @@ src/ptpip.egg-info/PKG-INFO
 src/ptpip.egg-info/SOURCES.txt
 src/ptpip.egg-info/dependency_links.txt
 src/ptpip.egg-info/top_level.txt
+src/ptpip/cli/__init__.py
+src/ptpip/cli/get_device_info.py
+src/ptpip/cli/get_device_prop_desc.py
+src/ptpip/cli/get_device_prop_value.py
+src/ptpip/cli/init_capture.py
+src/ptpip/cli/set_device_prop_value.py
 src/ptpip/constants/__init__.py
 src/ptpip/constants/association_type.py
 src/ptpip/constants/cmd_type.py
 src/ptpip/constants/data_object_transfer_mode.py
 src/ptpip/constants/event_type.py
 src/ptpip/constants/object_format.py
+src/ptpip/constants/packet_type.py
 src/ptpip/constants/property_type.py
 src/ptpip/constants/property_type_mutation.py
 src/ptpip/constants/response_code.py
@@ -48,6 +55,7 @@ src/ptpip/constants/device/focus_metering_mode.py
 src/ptpip/constants/device/focus_mode.py
 src/ptpip/constants/device/function_button.py
 src/ptpip/constants/device/functional_mode.py
+src/ptpip/constants/device/image_size.py
 src/ptpip/constants/device/indicator_display.py
 src/ptpip/constants/device/internal_flash_compensation.py
 src/ptpip/constants/device/internal_flash_manual.py
