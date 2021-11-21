@@ -58,7 +58,7 @@ class HtmlDeviceReportGenerator():
                 + escape(
                     prop.propType.name \
                     if prop.propType != None \
-                    else prop.propTypeId
+                    else str(prop.propTypeId)
                 ) \
             + '</td>' \
             + '<td>' + escape(prop.mode.name) + '</td>' \

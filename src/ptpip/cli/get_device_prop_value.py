@@ -20,9 +20,9 @@ class GetDevicePropValueCommand():
         prop = self.id if self.id != None else DevicePropertyType[self.name].value
 
         propType = None
-        if self.propTypeId != None:
+        if self.propTypeId is not None:
             propType = PropertyType(self.propTypeId)
-        elif self.propTypeName != None:
+        elif self.propTypeName is not None:
             propType = PropertyType[self.propTypeName]
         else:
             propDesc = await client.getDevicePropDesc(

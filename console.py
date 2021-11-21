@@ -9,6 +9,9 @@ from ptpip.client import PtpIpClient
 from ptpip.cli.get_device_info import GetDeviceInfoCommand
 from ptpip.cli.get_device_prop_desc import GetDevicePropDescCommand
 from ptpip.cli.get_device_prop_value import GetDevicePropValueCommand
+from ptpip.cli.get_num_objects import GetNumObjectsCommand
+from ptpip.cli.get_storage_ids import GetStorageIdsCommand
+from ptpip.cli.get_storage_info import GetStorageInfoCommand
 from ptpip.cli.init_capture import InitCaptureCommand
 from ptpip.cli.set_device_prop_value import SetDevicePropValueCommand
 
@@ -21,10 +24,11 @@ def cli():
 @click.option('--port', default=None, help='Port')
 @click.option('--debug', default=False, help='Debug mode')
 @click.option('--discover', default=True, help='Discover unoffically supported properties ?')
+@click.option('--more', default=False, help='Discover every possible property ?')
 @click.option('--report', default='d5300.html', help='Report filename')
-def getDeviceInfo(host, port, debug, discover, report):
+def getDeviceInfo(host, port, debug, discover, more, report):
     PtpIpClient(
-        GetDeviceInfoCommand(discover, report).run,
+        GetDeviceInfoCommand(discover, more, report).run,
         host = host,
         port = port,
         debug = debug
@@ -35,7 +39,7 @@ def getDeviceInfo(host, port, debug, discover, report):
 @click.option('--port', default=None, help='Port')
 @click.option('--debug', default=False, help='Debug mode')
 @click.option('--name', help='Property name')
-@click.option('--id', help='Property id')
+@click.option('--id', help='Property id', type=int)
 def getDevicePropDesc(host, port, debug, name, id):
     PtpIpClient(
         GetDevicePropDescCommand(name, id).run,
@@ -50,10 +54,10 @@ def getDevicePropDesc(host, port, debug, name, id):
 @click.option('--port', default=None, help='Port')
 @click.option('--debug', default=False, help='Debug mode')
 @click.option('--name', help='Property name')
-@click.option('--id', help='Property id')
+@click.option('--id', help='Property id', type=int)
 @click.option('--typename', help='Property type name')
-@click.option('--typeid', help='Property type id')
-@click.option('--value', help='Property value')
+@click.option('--typeid', help='Property type id', type=int)
+@click.option('--value', required=True, help='Property value')
 def setDevicePropValue(host, port, debug, name, id, typename, typeid, value):
     PtpIpClient(
         SetDevicePropValueCommand(name, id, typename, typeid, value).run,
@@ -67,10 +71,10 @@ def setDevicePropValue(host, port, debug, name, id, typename, typeid, value):
 @click.option('--port', default=None, help='Port')
 @click.option('--debug', default=False, help='Debug mode')
 @click.option('--name', help='Property name')
-@click.option('--id', help='Property id')
+@click.option('--id', help='Property id', type=int)
 @click.option('--typename', help='Property type name')
-@click.option('--typeid', help='Property type id')
-def setDevicePropValue(host, port, debug, name, id, typename, typeid):
+@click.option('--typeid', help='Property type id', type=int)
+def getDevicePropValue(host, port, debug, name, id, typename, typeid):
     PtpIpClient(
         GetDevicePropValueCommand(name, id, typename, typeid).run,
         host = host,
@@ -86,6 +90,47 @@ def setDevicePropValue(host, port, debug, name, id, typename, typeid):
 def initCapture(host, port, debug, output):
     PtpIpClient(
         InitCaptureCommand(output).run,
+        host = host,
+        port = port,
+        debug = debug
+    )
+
+@cli.command('storageids')
+@click.option('--host', default=None, help='Hostname')
+@click.option('--port', default=None, help='Port')
+@click.option('--debug', default=False, help='Debug mode')
+def getStorageIds(host, port, debug):
+    PtpIpClient(
+        GetStorageIdsCommand().run,
+        host = host,
+        port = port,
+        debug = debug
+    )
+
+@cli.command('storage')
+@click.option('--host', default=None, help='Hostname')
+@click.option('--port', default=None, help='Port')
+@click.option('--debug', default=False, help='Debug mode')
+@click.option('--id', required=True, help='Storage id', type=int)
+def getStorageInfo(host, port, debug, id):
+    PtpIpClient(
+        GetStorageInfoCommand(id).run,
+        host = host,
+        port = port,
+        debug = debug
+    )
+
+@cli.command('numobjects')
+@click.option('--host', default=None, help='Hostname')
+@click.option('--port', default=None, help='Port')
+@click.option('--debug', default=False, help='Debug mode')
+@click.option('--id', required=True, help='Storage id', type=int)
+@click.option('--format', help='Object format id', type=int)
+@click.option('--formatname', help='Object format name')
+@click.option('--handle', help='Object handle of the directory', type=int)
+def getNumObjects(host, port, debug, id, format, formatname, handle):
+    PtpIpClient(
+        GetNumObjectsCommand(id, format, formatname, handle).run,
         host = host,
         port = port,
         debug = debug

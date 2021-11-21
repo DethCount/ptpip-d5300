@@ -12,6 +12,8 @@ from ptpip.constants.data_object_transfer_mode import DataObjectTransferMode
 from ptpip.data_object.data_object import DataObject
 from ptpip.data_object.device_info import DeviceInfo
 from ptpip.data_object.device_prop_desc import DevicePropDesc
+from ptpip.data_object.storage_id_array import StorageIdArray
+from ptpip.data_object.storage_info import StorageInfo
 
 from ptpip.event.factory import EventFactory
 
@@ -126,6 +128,16 @@ class Connection():
             for event in events:
                 self.eventQueue.append(event)
 
+            return
+
+        if dataObject.packet.cmd == CmdType.GetStorageIDs:
+            storageIds = StorageIdArray(dataObject.packet, dataObject.data)
+            self.objectQueue.append(storageIds)
+            return
+
+        if dataObject.packet.cmd == CmdType.GetStorageInfo:
+            storage = StorageInfo(dataObject.packet, dataObject.data)
+            self.objectQueue.append(storage)
             return
 
         if dataObject.packet.cmd == CmdType.GetDevicePropDesc \

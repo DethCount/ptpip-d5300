@@ -28,6 +28,9 @@ class CmdResponse(Packet):
         )
 
         self.request = request
+        self.code = None
+        self.transactionId = None
+        self.parameters = []
 
         if data is not None:
             reader = StreamReader(data = data)
@@ -36,11 +39,13 @@ class CmdResponse(Packet):
                 if code in ResponseCode._value2member_map_ \
                 else code
             self.transactionId = reader.readUint32()
-            self.args = reader.readRest()
+
+            while reader.pos + 4 <= len(reader.data):
+                self.parameters.append(reader.readUint32())
 
     def __str__(self):
         return 'CmdResponse: ' + "\n" \
             + "\t" + 'type: ' + str(self.type) + "\n" \
             + "\t" + 'code: ' + str(self.code) + "\n" \
             + "\t" + 'transactionId: ' + str(self.transactionId) + "\n" \
-            + "\t" + 'args: ' + str(self.args) + "\n"
+            + "\t" + 'parameters: ' + str(self.parameters) + "\n"

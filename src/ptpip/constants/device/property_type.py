@@ -81,7 +81,7 @@ class DevicePropertyType(Enum):
     WBBracketingStep                = 0xD0C4 # @see WBBracketingStep
     LensID                          = 0xD0E0
     LensSort                        = 0xD0E1 # @see LensSort
-    LensType                        = 0xD0E2
+    LensType                        = 0xD0E2 # @see LensType
     LensFocalMin                    = 0xD0E3
     LensFocalMax                    = 0xD0E4
     LensApatureMin                  = 0xD0E5
@@ -126,9 +126,9 @@ class DevicePropertyType(Enum):
     RangeFinderSetting              = 0xD174
     ISOAutoHighLimit                = 0xD183 # @see ExposureIndex
     IndicatorDisplay                = 0xD18D # @see IndicatorDisplay
-    LiveViewStatus                  = 0xD1A2
-    LiveViewImageZoomRatio          = 0xD1A3
-    LiveViewProhibitionCondition    = 0xD1A4
+    LiveViewStatus                  = 0xD1A2 # @see OnOffProperty
+    LiveViewImageZoomRatio          = 0xD1A3 # @see LiveViewImageZoomRatio
+    LiveViewProhibitionCondition    = 0xD1A4 # @see LiveViewProhibitionCondition
     ExposureDisplayStatus           = 0xD1B0 # @see ExposureDisplayStatus
     ExposureIndicateStatus          = 0xD1B1 # @see ExposureIndicateStatus
     InfoDisplayErrorStatus          = 0xD1B2 # @see OnOffProperty

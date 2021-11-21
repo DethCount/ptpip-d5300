@@ -5,10 +5,11 @@ from ptpip.client import PtpIpClient
 from ptpip.report.html_device import HtmlDeviceReportGenerator
 
 class GetDeviceInfoCommand():
-    def __init__(self, discover, reportFileName):
+    def __init__(self, discover, discoverMore, reportFileName):
         super(GetDeviceInfoCommand, self).__init__()
 
         self.discover = discover
+        self.discoverMore = discoverMore
         self.reportFileName = reportFileName
 
     async def run(self, client: PtpIpClient):
@@ -26,7 +27,11 @@ class GetDeviceInfoCommand():
 
         discoveredProps = []
         if self.discover:
-            discoveredProps = await client.discoverDevicePropDesc(device, delay = 0.010)
+            discoveredProps = await client.discoverDevicePropDesc(
+                device,
+                delay = 0.001 if self.discoverMore else 0.010,
+                more = self.discoverMore
+            )
 
         # print(str(discoveredProps))
 

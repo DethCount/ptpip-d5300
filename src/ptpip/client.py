@@ -21,6 +21,8 @@ from ptpip.packet.cmd_response import CmdResponse
 from ptpip.data_object.data_object import DataObject
 from ptpip.data_object.device_info import DeviceInfo
 from ptpip.data_object.device_prop_desc import DevicePropDesc
+from ptpip.data_object.storage_id_array import StorageIdArray
+from ptpip.data_object.storage_info import StorageInfo
 
 class PtpIpClient():
     def __init__(
@@ -89,17 +91,21 @@ class PtpIpClient():
     async def discoverDevicePropDesc(
         self,
         device: DeviceInfo,
-        delay = 0
+        delay = 0,
+        more = False
     ):
         discovered = []
-        for idx, prop in enumerate(DevicePropertyType._value2member_map_):
-            if prop == DevicePropertyType.Undefined.value \
-                or prop in device.properties \
+        for propId in range(1, 65536):
+            if propId in device.properties \
+                or (
+                    not more
+                    and propId not in DevicePropertyType._value2member_map_
+                ) \
             :
                 continue
 
             response = await self.getDevicePropDesc(
-                prop,
+                propId,
                 delay = delay,
                 transactionId = self.conn.createTransaction()
             )
@@ -249,6 +255,92 @@ class PtpIpClient():
             :
                 self.conn.objectQueue.remove(objData)
                 return objData.data
+
+    async def getStorageIds(
+        self,
+        delay = 0,
+        transactionId = None
+    ):
+        if transactionId == None:
+            transactionId = self.conn.createTransaction()
+
+        cmd = CmdRequest(
+            transactionId = transactionId,
+            cmd = CmdType.GetStorageIDs.value
+        )
+
+        self.conn.sendCmd(cmd)
+
+        async for objData in self.conn.listenObjectDataQueue(delay = delay):
+            if objData.packet.transactionId == transactionId:
+                self.conn.objectQueue.remove(objData)
+                if isinstance(objData, StorageIdArray):
+                    return objData
+                elif isinstance(objData, CmdResponse):
+                    return objData.code
+                else:
+                    return None
+
+    async def getStorageInfo(
+        self,
+        storageId,
+        delay = 0,
+        transactionId = None
+    ):
+        if transactionId == None:
+            transactionId = self.conn.createTransaction()
+
+        cmd = CmdRequest(
+            transactionId = transactionId,
+            cmd = CmdType.GetStorageInfo.value,
+            param1 = storageId
+        )
+
+        self.conn.sendCmd(cmd)
+
+        async for objData in self.conn.listenObjectDataQueue(delay = delay):
+            if objData.packet.transactionId == transactionId:
+                self.conn.objectQueue.remove(objData)
+                if isinstance(objData, StorageInfo):
+                    return objData
+                elif isinstance(objData, CmdResponse):
+                    return objData.code
+                else:
+                    return None
+
+    async def getNumObjects(
+        self,
+        storageId,
+        objectFormatId = None,
+        handle = None,
+        delay = 0,
+        transactionId = None
+    ):
+        if transactionId == None:
+            transactionId = self.conn.createTransaction()
+
+        cmd = CmdRequest(
+            transactionId = transactionId,
+            cmd = CmdType.GetNumObjects.value,
+            param1 = storageId,
+            param2 = objectFormatId,
+            param3 = handle
+        )
+
+        self.conn.sendCmd(cmd)
+
+        async for objData in self.conn.listenObjectDataQueue(delay = delay):
+            if objData.packet.transactionId == transactionId:
+                self.conn.objectQueue.remove(objData)
+                if isinstance(objData.packet, CmdResponse):
+                    if objData.packet.code != ResponseCode.OK:
+                        return objData.packet.code
+                    elif len(objData.packet.parameters) > 0:
+                        return objData.packet.parameters[0];
+                    else:
+                        return None
+                else:
+                    return None
 
     async def getPictureControlCapabilities(
         self,

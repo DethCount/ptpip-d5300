@@ -1,5 +1,8 @@
+from ptpip.constants.on_off_property import OnOffProperty
+from ptpip.constants.property_type import PropertyType
+from ptpip.constants.property_type_mutation import PropertyTypeMutation
+
 from ptpip.constants.device.property_type import DevicePropertyType
-from ptpip.constants.device.on_off_property import OnOffProperty
 
 from ptpip.constants.device.active_pic_ctrl_item import ActivePicCtrlItem
 from ptpip.constants.device.ae_bracketing_step import AEBracketingStep
@@ -36,6 +39,9 @@ from ptpip.constants.device.internal_flash_mode import InternalFlashMode
 from ptpip.constants.device.internal_flash_status import InternalFlashStatus
 from ptpip.constants.device.lcd_power_off import LCDPowerOff
 from ptpip.constants.device.lens_sort import LensSort
+from ptpip.constants.device.lens_type import LensType
+from ptpip.constants.device.live_view_image_zoom_ratio import LiveViewImageZoomRatio
+from ptpip.constants.device.live_view_prohibition_condition import LiveViewProhibitionCondition
 from ptpip.constants.device.live_view_screen_display_setting import LiveViewScreenDisplaySetting
 from ptpip.constants.device.new_external_speed_light_mode import NewExternalSpeedLightMode
 from ptpip.constants.device.numbering_mode import NumberingMode
@@ -48,13 +54,11 @@ from ptpip.constants.device.self_timer_delay import SelfTimerDelay
 from ptpip.constants.device.self_timer_shoot_expose import SelfTimerShootExpose
 from ptpip.constants.device.shutter_speed import ShutterSpeed
 from ptpip.constants.device.still_capture_mode import StillCaptureMode
+from ptpip.constants.device.usb_speed import USBSpeed
 from ptpip.constants.device.warning_status import WarningStatus
 from ptpip.constants.device.wb_bracketing_step import WBBracketingStep
 from ptpip.constants.device.wb_tune_fluorescent import WBTuneFluorescent
 from ptpip.constants.device.white_balance import WhiteBalance
-
-from ptpip.constants.property_type import PropertyType
-from ptpip.constants.property_type_mutation import PropertyTypeMutation
 
 from ptpip.packet.stream_reader import StreamReader
 from ptpip.data_object.data_object import DataObject
@@ -293,6 +297,21 @@ class DevicePropDesc():
             :
                 return LensSort(value).name
 
+        if self.type == DevicePropertyType.LensType \
+            and value in LensType._value2member_map_ \
+            :
+                return LensType(value).name
+
+        if self.type == DevicePropertyType.LiveViewImageZoomRatio \
+            and value in LiveViewImageZoomRatio._value2member_map_ \
+            :
+                return LiveViewImageZoomRatio(value).name
+
+        if self.type == DevicePropertyType.LiveViewProhibitionCondition \
+            and value in LiveViewProhibitionCondition._value2member_map_ \
+            :
+                return LiveViewProhibitionCondition(value).name
+
         if self.type == DevicePropertyType.LiveViewScreenDisplaySetting \
             and value in LiveViewScreenDisplaySetting._value2member_map_ \
             :
@@ -353,6 +372,11 @@ class DevicePropDesc():
             :
                 return StillCaptureMode(value).name
 
+        if self.type == DevicePropertyType.USBSpeed \
+            and value in USBSpeed._value2member_map_ \
+            :
+                return USBSpeed(value).name
+
         if self.type == DevicePropertyType.WarningStatus \
             and value in WarningStatus._value2member_map_ \
             :
@@ -389,6 +413,7 @@ class DevicePropDesc():
             DevicePropertyType.InfoDisplayErrorStatus,
             DevicePropertyType.InternalFlashPopup,
             DevicePropertyType.ISOAutoControl,
+            DevicePropertyType.LiveViewStatus,
             DevicePropertyType.OrientationSensorMode
         ) and value in OnOffProperty._value2member_map_ \
         :
