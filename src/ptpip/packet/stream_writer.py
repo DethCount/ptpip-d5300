@@ -49,7 +49,9 @@ class StreamWriter():
         self.writeUint8(length)
 
         for i in range(0, length):
-            self.writeUint16(value[i])
+            self.writeUint16(ord(value[i]))
+
+        self.writeUint16(0)
 
         return self
 

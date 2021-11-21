@@ -1,5 +1,6 @@
 import struct
 
+from ptpip.constants.packet_type import PacketType
 from ptpip.constants.data_object_transfer_mode import DataObjectTransferMode
 
 from ptpip.data_object.data_object import DataObject
@@ -17,7 +18,7 @@ class InitCmdAck(Packet):
         sessionId = None
     ):
         super(InitCmdAck, self).__init__(
-            2,
+            PacketType.InitCmdAck,
             data = data,
             transactionId = transactionId,
             dataObject = dataObject,
@@ -36,7 +37,7 @@ class InitCmdAck(Packet):
 
     def __str__(self):
         return 'InitCmdAck: ' + "\n" \
-            + "\t" + 'cmdtype: ' + str(self.cmdtype) + "\n" \
+            + "\t" + 'type: ' + str(self.type) + "\n" \
             + "\t" + 'sessionId: ' + str(self.sessionId) + "\n" \
             + "\t" + 'guid: ' + str(self.guid) + "\n" \
             + "\t" + 'hostname: ' + str(self.hostname) + "\n"

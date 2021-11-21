@@ -125,7 +125,6 @@ class HtmlDeviceReportGenerator():
             + '<tbody>'
 
         for prop in properties:
-            print(prop)
             html += self.generatePropertyReport(prop)
 
         return html + '</tbody>' \

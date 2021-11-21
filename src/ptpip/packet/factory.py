@@ -1,5 +1,6 @@
 import struct
 
+from ptpip.constants.packet_type import PacketType
 from ptpip.constants.data_object_transfer_mode import DataObjectTransferMode
 
 from ptpip.data_object.data_object import DataObject
@@ -33,9 +34,10 @@ class PacketFactory():
 
         reader = StreamReader(data = data)
 
-        cmdtype = reader.readUint32()
+        packetType = PacketType(reader.readUint32())
+        # print('PacketType: ' + packetType.name);
 
-        if cmdtype == 1:
+        if packetType == PacketType.InitCmdReq:
             # print("InitCmdReq")
             return InitCmdReq(
                 data = reader.readRest(),
@@ -43,7 +45,7 @@ class PacketFactory():
                 dataObject = dataObject,
                 dataObjectTransferMode = dataObjectTransferMode
             )
-        elif cmdtype == 2:
+        elif packetType == PacketType.InitCmdAck:
             # print("InitCmdAck")
             return InitCmdAck(
                 data = reader.readRest(),
@@ -52,7 +54,7 @@ class PacketFactory():
                 dataObjectTransferMode = dataObjectTransferMode,
                 sessionId = sessionId
             )
-        elif cmdtype == 3:
+        elif packetType == PacketType.EventReq:
             # print("EventReq")
             return EventReq(
                 data = reader.readRest(),
@@ -61,7 +63,7 @@ class PacketFactory():
                 dataObjectTransferMode = dataObjectTransferMode,
                 sessionId = sessionId
             )
-        elif cmdtype == 4:
+        elif packetType == PacketType.EventAck:
             # print("EventAck")
             return EventAck(
                 data = reader.readRest(),
@@ -71,7 +73,7 @@ class PacketFactory():
                 sessionId = sessionId,
                 request = request
             )
-        elif cmdtype == 5:
+        elif packetType == PacketType.InitFail:
             # print("InitFail")
             return InitFail(
                 data = reader.readRest(),
@@ -79,7 +81,7 @@ class PacketFactory():
                 dataObject = dataObject,
                 dataObjectTransferMode = dataObjectTransferMode
             )
-        elif cmdtype == 6:
+        elif packetType == PacketType.CmdRequest:
             # print("CmdRequest")
             return CmdRequest(
                 data = reader.readRest(),
@@ -87,7 +89,7 @@ class PacketFactory():
                 dataObject = dataObject,
                 dataObjectTransferMode = dataObjectTransferMode
             )
-        elif cmdtype == 7:
+        elif packetType == PacketType.CmdResponse:
             # print("CmdResponse")
             return CmdResponse(
                 data = reader.readRest(),
@@ -96,7 +98,9 @@ class PacketFactory():
                 dataObjectTransferMode = dataObjectTransferMode,
                 request = request
             )
-        elif cmdtype == 9:
+        # elif packetType == PacketType.Event:
+            # print("Event")
+        elif packetType == PacketType.StartData:
             # print("StartDataPacket")
             return StartDataPacket(
                 data = reader.readRest(),
@@ -105,7 +109,7 @@ class PacketFactory():
                 dataObjectTransferMode = dataObjectTransferMode,
                 request = request
             )
-        elif cmdtype == 10:
+        elif packetType == PacketType.Data:
             # print("DataPacket")
             return DataPacket(
                 data = reader.readRest(),
@@ -114,7 +118,7 @@ class PacketFactory():
                 dataObjectTransferMode = dataObjectTransferMode,
                 request = request
             )
-        elif cmdtype == 12:
+        elif packetType == PacketType.EndData:
             # print("EndDataPacket")
             return EndDataPacket(
                 data = reader.readRest(),
@@ -123,7 +127,7 @@ class PacketFactory():
                 dataObjectTransferMode = dataObjectTransferMode,
                 request = request
             )
-        elif cmdtype == 13:
+        elif packetType == PacketType.Ping:
             # print("Ping")
             return Ping(
                 data = reader.readRest(),
@@ -131,9 +135,9 @@ class PacketFactory():
                 dataObject = dataObject,
                 dataObjectTransferMode = dataObjectTransferMode
             )
-        # elif cmdtype == 14:
-            # print("GetDeviceInfo")
+        # elif packetType == PacketType.Pong:
+            # print("Pong")
         else:
-            print("Unknown cmdtype: " + str(cmdtype))
+            print("Unknown packet type: " + str(packetType))
 
         return None

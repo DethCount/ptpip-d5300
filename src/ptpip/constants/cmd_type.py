@@ -52,7 +52,7 @@ class CmdType(Enum):
     DeleteImagesInSdram         = 0x90C3
     GetLargeThumb               = 0x90C4
     GetEvent                    = 0x90C7
-    DeviceReady                 = 0x90C8
+    DeviceReady                 = 0x90C8 # 37064
     SetPreWbData                = 0x90C9
     GetVendorPropCodes          = 0x90CA
     AfAndCaptureRecInSdram      = 0x90CB

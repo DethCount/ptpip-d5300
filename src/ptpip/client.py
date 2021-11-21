@@ -6,6 +6,7 @@ from threading import Thread
 from ptpip.connection import Connection
 
 from ptpip.constants.cmd_type import CmdType
+from ptpip.constants.event_type import EventType
 from ptpip.constants.property_type import PropertyType
 from ptpip.constants.response_code import ResponseCode
 from ptpip.constants.data_object_transfer_mode import DataObjectTransferMode
@@ -27,20 +28,20 @@ class PtpIpClient():
         middleware,
         host = None,
         port = None,
-        communicationThreadDelay = 0
+        communicationThreadDelay = 0,
+        debug = False
     ):
         super(PtpIpClient, self).__init__()
 
         self.host = host
         self.port = port
         self.communicationThreadDelay = communicationThreadDelay
-        self.lastTransactionId = 2021;
+        self.debug = debug == True
 
-        self.conn = Connection()
+        self.conn = Connection(debug = debug)
         self.conn.open(
             host = self.host,
-            port = self.port,
-            transactionId = self.lastTransactionId
+            port = self.port
         )
 
         # Start the Thread which is constantly checking the status of the camera
@@ -64,10 +65,8 @@ class PtpIpClient():
             pass
 
     async def getDeviceInfo(self, delay = 0, transactionId = None):
-        print('getDeviceInfo')
         if transactionId == None:
-            self.lastTransactionId += 1
-            transactionId = self.lastTransactionId
+            transactionId = self.conn.createTransaction()
 
         cmd = CmdRequest(
             transactionId = transactionId,
@@ -92,7 +91,6 @@ class PtpIpClient():
         device: DeviceInfo,
         delay = 0
     ):
-        print('discoverDevicePropDesc')
         discovered = []
         for idx, prop in enumerate(DevicePropertyType._value2member_map_):
             if prop == DevicePropertyType.Undefined.value \
@@ -100,16 +98,13 @@ class PtpIpClient():
             :
                 continue
 
-            self.lastTransactionId += 1
-
             response = await self.getDevicePropDesc(
                 prop,
                 delay = delay,
-                transactionId = self.lastTransactionId
+                transactionId = self.conn.createTransaction()
             )
 
             if isinstance(response, ResponseCode):
-                print(DevicePropertyType(prop).name + ': ' + response.name)
                 continue
 
             discovered.append(response)
@@ -118,10 +113,8 @@ class PtpIpClient():
 
 
     async def getDevicePropDesc(self, prop, delay = 0, transactionId = None):
-        print('getDevicePropDesc')
         if transactionId == None:
-            self.lastTransactionId += 1
-            transactionId = self.lastTransactionId
+            transactionId = self.conn.createTransaction()
 
         cmd = CmdRequest(
             transactionId = transactionId,
@@ -151,10 +144,8 @@ class PtpIpClient():
         delay = 0,
         transactionId = None
     ):
-        print('setDevicePropValue')
         if transactionId == None:
-            self.lastTransactionId += 1
-            transactionId = self.lastTransactionId
+            transactionId = self.conn.createTransaction()
 
         cmd = CmdRequest(
             transactionId = transactionId,
@@ -190,10 +181,8 @@ class PtpIpClient():
         delay = 0,
         transactionId = None
     ):
-        print('getDevicePropValue')
         if transactionId == None:
-            self.lastTransactionId += 1
-            transactionId = self.lastTransactionId
+            transactionId = self.conn.createTransaction()
 
         cmd = CmdRequest(
             transactionId = transactionId,
@@ -217,6 +206,50 @@ class PtpIpClient():
                 else:
                     return None
 
+    async def initCapture(
+        self,
+        delay = 0,
+        transactionId = None
+    ):
+        if transactionId == None:
+            transactionId = self.conn.createTransaction()
+
+        cmd = CmdRequest(
+            transactionId = transactionId,
+            cmd = CmdType.InitiateCapture.value,
+            param1 = 0,
+            param2 = 0
+        )
+
+        self.conn.sendCmd(cmd)
+
+        foundEvent = False
+        async for event in self.conn.listenEventQueue(delay = delay):
+            if event.type == EventType.ObjectAdded:
+                self.conn.eventQueue.remove(event)
+                foundEvent = event
+                break
+
+        if not foundEvent:
+            raise(Exception('Couldn\'t receive capture event'))
+
+        objTransactionId = self.conn.createTransaction()
+
+        cmd = CmdRequest(
+            transactionId = objTransactionId,
+            cmd = CmdType.GetObject.value,
+            param1 = event.parameter
+        )
+
+        self.conn.sendCmd(cmd)
+
+        async for objData in self.conn.listenObjectDataQueue(delay = delay):
+            if isinstance(objData, DataObject) \
+                and objData.packet.transactionId == objTransactionId \
+            :
+                self.conn.objectQueue.remove(objData)
+                return objData.data
+
     async def getPictureControlCapabilities(
         self,
         picCtrlItem,
@@ -224,7 +257,6 @@ class PtpIpClient():
         delay = 0,
         transactionId = None
     ):
-        print('getPictureControlCapabilities')
         if transactionId == None:
             self.lastTransactionId += 1
             transactionId = self.lastTransactionId

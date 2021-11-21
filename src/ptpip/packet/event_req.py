@@ -1,5 +1,6 @@
 import struct
 
+from ptpip.constants.packet_type import PacketType
 from ptpip.constants.data_object_transfer_mode import DataObjectTransferMode
 
 from ptpip.data_object.data_object import DataObject
@@ -18,7 +19,7 @@ class EventReq(Packet):
         sessionId = None
     ):
         super(EventReq, self).__init__(
-            3,
+            PacketType.EventReq,
             data = data,
             transactionId = transactionId,
             dataObject = dataObject,
@@ -35,11 +36,11 @@ class EventReq(Packet):
 
     def pack(self):
         return StreamWriter() \
-            .writeUint32(self.cmdtype) \
+            .writeUint32(self.type.value) \
             .writeUint32(self.sessionId) \
             .data
 
     def __str__(self):
         return 'EventReq: ' + "\n" \
-            + "\t" + 'cmdtype: ' + str(self.cmdtype) + "\n" \
+            + "\t" + 'type: ' + str(self.type) + "\n" \
             + "\t" + 'sessionId: ' + str(self.sessionId) + "\n"

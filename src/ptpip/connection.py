@@ -24,18 +24,20 @@ from ptpip.packet.cmd_response import CmdResponse
 from ptpip.packet.start_data import StartDataPacket
 from ptpip.packet.data import DataPacket
 from ptpip.packet.end_data import EndDataPacket
+from ptpip.packet.event_req import EventReq
 from ptpip.packet.init_cmd_ack import InitCmdAck
 from ptpip.packet.init_cmd_req import InitCmdReq
-from ptpip.packet.event_req import EventReq
+from ptpip.packet.ping import Ping
 
 class Connection():
     DEFAULT_HOST = '192.168.1.1'
     DEFAULT_PORT = 15740
 
     """docstring for PtpIP"""
-    def __init__(self):
+    def __init__(self, debug = False):
         super(Connection, self).__init__()
 
+        self.debug = debug
         self.session = None
         self.sessionEvents = None
         self.sessionId = None
@@ -43,10 +45,17 @@ class Connection():
         self.eventQueue = []
         self.objectQueue = []
 
+        self.lastTransactionId = 2021;
+
+    def createTransaction(self):
+        self.lastTransactionId += 1
+
+        return self.lastTransactionId
+
     def open(self,
         host = None,
         port = None,
-        transactionId = 0
+        transactionId = None
     ):
         # Open both session, first one for for commands, second for events
         self.session = self.connect(host = host, port = port)
@@ -56,7 +65,9 @@ class Connection():
         self.sendReceivePacket(EventReq(), self.sessionEvents)
 
         cmd = CmdRequest(
-            transactionId = transactionId,
+            transactionId = transactionId \
+                if transactionId != None \
+                else self.createTransaction(),
             cmd = CmdType.OpenSession.value,
             param1 = self.sessionId,
             paramType1 = PropertyType.Uint32
@@ -65,27 +76,34 @@ class Connection():
         self.sendReceivePacket(cmd, self.session)
 
     def communicationThread(self, delay = 0):
-        while True:
-            if len(self.cmdQueue) == 0:
-                # do a ping receive a pong (same as ping) as reply to keep the connection alive
-                # couldnt get any reply onto a propper Ping packet so i am querying the status
-                # of the device
-                reply = self.sendReceivePacket(
-                    CmdRequest(
-                        transactionId = 6,
-                        cmd = CmdType.DeviceReady.value
-                    ),
-                    self.session
-                )
-            else:
-                cmd = self.cmdQueue.pop()
-                reply = self.sendReceivePacket(cmd, self.session)
-                if reply.code != ResponseCode.OK.value \
-                    and reply.code != ResponseCode.DeviceBusy.value \
-                :
-                    print("CCC Cmd reply is: " + str(reply.code))
+        try:
+            while True:
+                if len(self.cmdQueue) == 0:
+                    # do a ping receive a pong (same as ping) as reply to keep the connection alive
+                    # couldnt get any reply onto a propper Ping packet so i am querying the status
+                    # of the device
+                    """
+                    reply = self.sendReceivePacket(
+                        CmdRequest(
+                            transactionId = self.createTransaction(),
+                            cmd = CmdType.DeviceReady.value
+                        ),
+                        self.session
+                    )
+                    """
+                else:
+                    cmd = self.cmdQueue.pop()
+                    reply = self.sendReceivePacket(cmd, self.session)
+                    if self.debug \
+                        and reply.code != ResponseCode.OK.value \
+                        and reply.code != ResponseCode.DeviceBusy.value \
+                    :
+                        print("CCC Cmd reply is: " + str(reply.code))
 
-            time.sleep(delay)
+                time.sleep(delay)
+        except Exception as err:
+            raise(Exception('Error in communication thread: ' + str(err)))
+
         print(str('End of communication'))
 
     def queueObject(self, dataObject):
@@ -93,18 +111,16 @@ class Connection():
             self.objectQueue.append(dataObject)
             return
 
-        if dataObject.packet.cmd == CmdType.GetDeviceInfo.value:
+        if dataObject.packet.cmd == CmdType.GetDeviceInfo:
             device = DeviceInfo(dataObject.packet, dataObject.data)
             self.objectQueue.append(device)
             return
 
-        if dataObject.packet.cmd == CmdType.GetObject.value:
-            dataStream = io.BytesIO(dataObject.data)
-            img = Image.open(dataStream)
-            self.objectQueue.append(img)
+        if dataObject.packet.cmd == CmdType.GetObject:
+            self.objectQueue.append(dataObject)
             return
 
-        if dataObject.packet.cmd == CmdType.GetEvent.value:
+        if dataObject.packet.cmd == CmdType.GetEvent:
             events = EventFactory(dataObject.data).getEvents()
 
             for event in events:
@@ -112,7 +128,7 @@ class Connection():
 
             return
 
-        if dataObject.packet.cmd == CmdType.GetDevicePropDesc.value \
+        if dataObject.packet.cmd == CmdType.GetDevicePropDesc \
             and dataObject.data != None \
         :
             devicePropDesc = DevicePropDesc(dataObject.packet, dataObject.data)
@@ -128,6 +144,26 @@ class Connection():
 
             for idx, dataObject in enumerate(self.objectQueue):
                 yield dataObject
+
+            time.sleep(delay)
+            pass
+
+    async def listenEventQueue(self, delay = 0):
+        if delay < 1:
+            delay = 1
+
+        while True:
+            # print('OOO Events in queue: ' + str(len(self.eventQueue)))
+
+            cmd = CmdRequest(
+                cmd = CmdType.GetEvent.value,
+                transactionId = self.createTransaction()
+            )
+
+            self.sendCmd(cmd)
+
+            for idx, event in enumerate(self.eventQueue):
+                yield event
 
             time.sleep(delay)
             pass
@@ -149,11 +185,10 @@ class Connection():
         except socket.error as err:
             if s:
                 s.close()
-            print("Could not open socket: " + str(err))
+            raise(Exception("Could not open socket: " + str(err)))
         return s
 
     def sendReceivePacket(self, packet: Packet, session):
-        print('sendReceivePacket: ' + str(packet))
         if isinstance(packet, EventReq) and packet.sessionId is None:
             packet.sessionId = self.sessionId
 
@@ -191,7 +226,7 @@ class Connection():
             )
 
         # receive response
-        reply = self.getResponse(session)
+        reply = self.receivePacket(session)
 
         if isinstance(reply, InitCmdAck):
             self.sessionId = reply.sessionId
@@ -204,16 +239,16 @@ class Connection():
             if isinstance(reply, StartDataPacket):
                 dataLength = reply.length
 
-                reply = self.getResponse(session, request = packet)
+                reply = self.receivePacket(session, request = packet)
                 data = reply.data
                 while isinstance(reply, DataPacket):
                     data += reply.content
-                    reply = self.getResponse(session, request = packet)
+                    reply = self.receivePacket(session, request = packet)
 
                 if dataLength == len(data):
                     self.queueObject(DataObject(packet, data = data))
 
-                reply = self.getResponse(session, request = packet)
+                reply = self.receivePacket(session, request = packet)
             else:
                 self.queueObject(DataObject(reply, data = None))
 
@@ -226,7 +261,36 @@ class Connection():
 
         self.sendPacket(packet, session)
 
+    def sendPacket(self, packet, session):
+        if self.debug:
+            print('---- SEND ----')
+            print(str(packet))
+        self.sendData(packet.pack(), session)
+
+        if self.debug:
+            print('---- End SEND ----')
+
+    def receivePacket(self, session, request: Packet = None):
+        if self.debug:
+            print('---- RECV ----')
+
+        packet = PacketFactory.createPacket(
+            data = self.receiveData(session),
+            request = request,
+            sessionId = self.sessionId
+        )
+
+        if self.debug:
+            print(str(packet))
+            print('---- End RECV ----')
+
+        return packet
+
     def sendData(self, data, session):
+        err = session.getsockopt(socket.SOL_SOCKET, socket.SO_ERROR)
+        if 0 != err:
+            raise OSError('Socket error: ' + str(err))
+
         session.send(
             StreamWriter() \
                 .writeUint32(len(data) + 4) \
@@ -234,29 +298,29 @@ class Connection():
                 .data
         )
 
-    def sendPacket(self, packet, session):
-        print('---- SEND ----')
-        print('CmdType: ' + str(packet.cmdtype))
-        self.sendData(packet.pack(), session)
-        print('---- End SEND ----')
+    def receiveData(self, session, nbTries = 3):
+        if self.debug:
+            print('RECV DATA')
 
-    def receiveData(self, session):
-        reader = StreamReader(data = session.recv(4))
+        err = session.getsockopt(socket.SOL_SOCKET, socket.SO_ERROR)
+        if 0 != err:
+            raise OSError('Socket error: ' + str(err))
+
+        data = session.recv(4)
+
+        if len(data) < 4:
+            if nbTries > 1:
+                self.receiveData(session, nbTries - 1)
+            else:
+                raise(Exception('Communication lost'))
+
+        reader = StreamReader(data = data)
         dataLength = reader.readUint32()
-        print("RECV Data length: " + str(dataLength))
+
+        if self.debug:
+            print("RECV Data length: " + str(dataLength))
+
         while dataLength > len(reader.data):
             reader.data += session.recv(dataLength - len(reader.data))
 
         return reader.readRest()
-
-    def getResponse(self, session, request: Packet = None):
-        response = PacketFactory.createPacket(
-            data = self.receiveData(session),
-            request = request,
-            sessionId = self.sessionId
-        )
-
-        print('---- RECV ----')
-        print('CmdType: ' + str(response.cmdtype))
-
-        return response

@@ -1,5 +1,6 @@
 import struct
 
+from ptpip.constants.packet_type import PacketType
 from ptpip.constants.data_object_transfer_mode import DataObjectTransferMode
 
 from ptpip.data_object.data_object import DataObject
@@ -7,7 +8,7 @@ from ptpip.data_object.data_object import DataObject
 class Packet(object):
     def __init__(
         self,
-        cmdtype,
+        type: PacketType,
         transactionId = None,
         data = None,
         dataObject: DataObject = None,
@@ -15,7 +16,7 @@ class Packet(object):
     ):
         super(Packet, self).__init__()
 
-        self.cmdtype = cmdtype
+        self.type = type
         self.transactionId = transactionId
         self.data = data
         self.dataObject = dataObject

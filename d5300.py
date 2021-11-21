@@ -1,97 +1,120 @@
 import asyncio
+import sys
 
 from PIL import Image
+
+sys.path.append('./src')
 
 from ptpip.constants.cmd_type import CmdType
 from ptpip.constants.event_type import EventType
 from ptpip.constants.property_type import PropertyType
+from ptpip.constants.response_code import ResponseCode
 
 from ptpip.constants.device.property_type import DevicePropertyType
+from ptpip.constants.device.exposure_ev_step import ExposureEVStep
+from ptpip.constants.device.exposure_index import ExposureIndex
+from ptpip.constants.device.exposure_program_mode import ExposureProgramMode
 from ptpip.constants.device.exposure_time import ExposureTime
+from ptpip.constants.device.image_size import ImageSize
+from ptpip.constants.device.recording_media import RecordingMedia
+from ptpip.constants.device.scene_mode import SceneMode
+from ptpip.constants.device.white_balance import WhiteBalance
 
 from ptpip.client import PtpIpClient
 from ptpip.packet.cmd_request import CmdRequest
+from ptpip.packet.cmd_response import CmdResponse
 
 from ptpip.report.html_device import HtmlDeviceReportGenerator
 
-async def usePtpIpClient(client: PtpIpClient):
-    device = await client.getDeviceInfo()
-    # print('Device: ' + str(device))
+astronomyMode = (
+    {
+        "prop": DevicePropertyType.WhiteBalance.value,
+        "propType": PropertyType.Uint16,
+        "value": WhiteBalance.Incandescent.value
+    },
+    {
+        "prop": DevicePropertyType.ExposureEVStep.value,
+        "propType": PropertyType.Uint8,
+        "value": ExposureEVStep.ThirdEV.value
+    },
+)
 
-    props = []
-    for idx, prop in enumerate(device.properties):
-        propDesc = await client.getDevicePropDesc(
-            prop = prop,
-            delay = 0
+astronomyGuidingMode = astronomyMode + (
+    {
+        "prop": DevicePropertyType.ImageSize.value,
+        "propType": PropertyType.String,
+        "value": ImageSize.Pix2992x2000.value
+    },
+    {
+        "prop": DevicePropertyType.ExposureIndex.value,
+        "propType": PropertyType.Uint16,
+        "value": ExposureIndex.Iso3200.value
+    },
+    {
+        "prop": DevicePropertyType.ExposureTime.value,
+        "propType": PropertyType.Uint32,
+        "value": ExposureTime.OneOver4000.value
+    },
+    {
+        "prop": DevicePropertyType.RecordingMedia.value,
+        "propType": PropertyType.Uint8,
+        "value": RecordingMedia.SDRAM.value
+    }
+)
+
+astronomyLongExposureMode = astronomyMode + (
+    {
+        "prop": DevicePropertyType.ImageSize.value,
+        "propType": PropertyType.String,
+        "value": ImageSize.Pix6000x4000.value
+    },
+    {
+        "prop": DevicePropertyType.ExposureIndex.value,
+        "propType": PropertyType.Uint16,
+        "value": ExposureIndex.Hi1.value
+    },
+    {
+        "prop": DevicePropertyType.ExposureTime.value,
+        "propType": PropertyType.Uint32,
+        "value": ExposureTime.OneBy30.value
+    },
+    {
+        "prop": DevicePropertyType.RecordingMedia.value,
+        "propType": PropertyType.Uint8,
+        "value": RecordingMedia.SDCard.value
+    }
+)
+
+async def switchMode(client: PtpIpClient, mode: list):
+    for setPropArgs in mode:
+        propName = DevicePropertyType(setPropArgs['prop']).name \
+            if setPropArgs['prop'] in DevicePropertyType._value2member_map_ \
+            else setPropArgs['prop']
+
+        print(
+            propName + '(' + PropertyType(setPropArgs['propType']).name + '): ' \
+                + str(setPropArgs['value'])
         )
-        props.append(propDesc)
-        # print('Prop desc(' + str(idx) + '):' + "\n" + str(propDesc))
 
-    discoveredProps = await client.discoverDevicePropDesc(device, delay = 0.010)
-    # print(str(discoveredProps))
+        response = await client.setDevicePropValue(
+            prop=setPropArgs['prop'],
+            propType = setPropArgs['propType'],
+            value=setPropArgs['value']
+        )
 
-    html = HtmlDeviceReportGenerator(device, props, discoveredProps) \
-        .generate()
+        if not isinstance(response, ResponseCode):
+            raise(Exception('Error while setting property ' + propName))
 
-    reportFileName = 'd5300.html'
-    f = open(reportFileName, 'w')
-    f.write(html)
-    f.close()
+        if response != ResponseCode.OK:
+            raise(Exception('Error while setting property ' + propName \
+                + ': ' + response.name
+            ))
 
-    print('Report saved ! ' + reportFileName)
+async def usePtpIpClient(client: PtpIpClient):
+    await switchMode(client, astronomyGuidingMode)
 
-    setExposureIndexResponse = await client.setDevicePropValue(
-        prop = DevicePropertyType.ExposureIndex.value,
-        propType = PropertyType.Uint16,
-        value = 3200
-    )
-
-    print('setExposureIndexResponse: ' + str(setExposureIndexResponse))
-
-    exposureIndex = await client.getDevicePropValue(
-        prop = DevicePropertyType.ExposureIndex.value,
-        propType = PropertyType.Uint16
-    )
-
-    print('Exposure index : ' + str(exposureIndex))
-
-    """
-    pictureControlCapabilities = await client.getPictureControlCapabilities()
-    """
-
-    """
-
-    client.setDevicePropDesc(
-        prop = DevicePropertyType.ExposureTime.value,
-        value = ExposureTime.OneOver4000.value
-    )
-    """
-
-    """
-    # create a PTP/IP command request object and add it to the queue of the PTP/IP connection object
-    cmd = CmdRequest(
-        transactionId = 2,
-        cmd = CmdType.InitiateCaptureRecInMedia.value,
-        param1 = 0xffffffff,
-        param2 = 0x0000
-    )
-    packet = client.sendCmd(cmd)
-
-    # get the events from the camera, they will be stored in the eventQueue of the ptpip object
-    cmd = CmdRequest(
-        cmd = CmdType.GetEvent.value
-    )
-    packet = client.sendCmd(cmd)
-
-    # query the events for the event you are looking for, for example the 0x4002 ObjectAdded if you look
-    # for a image captured
-    for event in client.conn.eventQueue:
-        if event.eventType == EventType.ObjectAdded.value:
-            cmd = CmdRequest(
-                cmd = CmdType.GetObject.value,
-                param1 = event.parameter
-            )
-            packet = client.sendCmd(cmd)
-    """
-
-PtpIpClient(usePtpIpClient)
+PtpIpClient(
+    usePtpIpClient,
+    communicationThreadDelay = 0,
+    debug = True
+)

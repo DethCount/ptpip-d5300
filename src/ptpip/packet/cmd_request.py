@@ -1,5 +1,6 @@
 import struct
 
+from ptpip.constants.packet_type import PacketType
 from ptpip.constants.cmd_type import CmdType
 from ptpip.constants.property_type import PropertyType
 from ptpip.constants.data_object_transfer_mode import DataObjectTransferMode
@@ -29,14 +30,14 @@ class CmdRequest(Packet):
         paramType5: PropertyType = PropertyType.Uint32,
     ):
         super(CmdRequest, self).__init__(
-            cmdtype = 6,
+            PacketType.CmdRequest,
             transactionId = transactionId,
             data = data,
             dataObject = dataObject,
             dataObjectTransferMode = dataObjectTransferMode
         )
 
-        self.cmd = cmd
+        self.cmd = CmdType(cmd)
         self.param1 = param1
         self.param2 = param2
         self.param3 = param3
@@ -50,9 +51,9 @@ class CmdRequest(Packet):
 
     def pack(self):
         writer = StreamWriter() \
-            .writeUint32(self.cmdtype) \
+            .writeUint32(self.type.value) \
             .writeUint32(self.dataObjectTransferMode.value) \
-            .writeUint16(self.cmd) \
+            .writeUint16(self.cmd.value) \
             .writeUint32(self.transactionId)
 
         if self.param1 is not None:
@@ -70,9 +71,9 @@ class CmdRequest(Packet):
 
     def __str__(self):
         return 'CmdRequest: ' + "\n" \
-            + "\t" + 'cmdtype: ' + str(self.cmdtype) + "\n" \
+            + "\t" + 'type: ' + self.type.name + "\n" \
             + "\t" + 'dataObjectTransferMode: ' + str(self.dataObjectTransferMode.name) + "\n" \
-            + "\t" + 'ptp_cmd: ' + str(self.cmd) + "\n" \
+            + "\t" + 'cmd: ' + str(self.cmd.name) + "\n" \
             + "\t" + 'param1: ' + str(self.param1) + "\n" \
             + "\t" + 'param2: ' + str(self.param2) + "\n" \
             + "\t" + 'param3: ' + str(self.param3) + "\n" \

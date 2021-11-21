@@ -1,5 +1,6 @@
 import struct
 
+from ptpip.constants.packet_type import PacketType
 from ptpip.constants.data_object_transfer_mode import DataObjectTransferMode
 
 from ptpip.data_object.data_object import DataObject
@@ -19,7 +20,7 @@ class DataPacket(Packet):
         content = None
     ):
         super(DataPacket, self).__init__(
-            10,
+            PacketType.Data,
             data = data,
             transactionId = transactionId,
             dataObject = dataObject,
@@ -36,13 +37,13 @@ class DataPacket(Packet):
 
     def pack(self):
         return StreamWriter() \
-            .writeUint32(self.cmdtype) \
+            .writeUint32(self.type.value) \
             .writeUint32(self.transactionId) \
             .writeBytes(self.content) \
             .data
 
     def __str__(self):
         return 'DataPacket: ' + "\n" \
-            + "\t" + 'cmdtype: ' + str(self.cmdtype) + "\n" \
+            + "\t" + 'type: ' + str(self.type) + "\n" \
             + "\t" + 'transactionId: ' + str(self.transactionId) + "\n" \
             + "\t" + 'data: ' + str(self.data) + "\n"

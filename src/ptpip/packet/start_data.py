@@ -1,5 +1,6 @@
 import struct
 
+from ptpip.constants.packet_type import PacketType
 from ptpip.constants.data_object_transfer_mode import DataObjectTransferMode
 
 from ptpip.data_object.data_object import DataObject
@@ -19,7 +20,7 @@ class StartDataPacket(Packet):
         length = None
     ):
         super(StartDataPacket, self).__init__(
-            9,
+            PacketType.StartData,
             data = data,
             transactionId = transactionId,
             dataObject = dataObject,
@@ -28,7 +29,6 @@ class StartDataPacket(Packet):
 
         self.request = request
         self.length = length
-        print(str(self.length))
 
         if data is not None:
             reader = StreamReader(data = data)
@@ -37,13 +37,13 @@ class StartDataPacket(Packet):
 
     def pack(self):
         return StreamWriter() \
-            .writeUint32(self.cmdtype) \
+            .writeUint32(self.type.value) \
             .writeUint32(self.transactionId) \
             .writeUint32(self.length) \
             .data
 
     def __str__(self):
         return 'StartDataPacket: ' + "\n" \
-            + "\t" + 'cmdtype: ' + str(self.cmdtype) + "\n" \
+            + "\t" + 'type: ' + str(self.type) + "\n" \
             + "\t" + 'transactionId: ' + str(self.transactionId) + "\n" \
             + "\t" + 'length: ' + str(self.length) + "\n"

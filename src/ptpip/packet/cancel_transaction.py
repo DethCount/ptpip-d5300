@@ -1,5 +1,6 @@
 import struct
 
+from ptpip.constants.packet_type import PacketType
 from ptpip.constants.data_object_transfer_mode import DataObjectTransferMode
 
 from ptpip.data_object.data_object import DataObject
@@ -15,7 +16,7 @@ class CancelTransaction(Packet):
         dataObjectTransferMode: DataObjectTransferMode = None
     ):
         super(CancelTransaction, self).__init__(
-            11,
+            PacketType.CancelTransaction,
             transactionId = transactionId,
             data = data,
             dataObject = dataObject,
@@ -27,5 +28,5 @@ class CancelTransaction(Packet):
 
     def __str__(self):
         return 'CancelTransaction: ' + "\n" \
-            + "\t" + 'cmdtype: ' + str(self.cmdtype) + "\n" \
+            + "\t" + 'type: ' + str(self.type) + "\n" \
             + "\t" + 'transactionId: ' + str(self.transactionId) + "\n"

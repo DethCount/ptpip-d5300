@@ -1,5 +1,6 @@
 import struct
 
+from ptpip.constants.packet_type import PacketType
 from ptpip.constants.data_object_transfer_mode import DataObjectTransferMode
 
 from ptpip.data_object.data_object import DataObject
@@ -18,7 +19,7 @@ class EndDataPacket(Packet):
         request: Packet = None
     ):
         super(EndDataPacket, self).__init__(
-            12,
+            PacketType.EndData,
             data = data,
             transactionId = transactionId,
             dataObject = dataObject,
@@ -36,12 +37,12 @@ class EndDataPacket(Packet):
 
     def pack(self):
         return StreamWriter() \
-            .writeUint32(self.cmdtype) \
+            .writeUint32(self.type.value) \
             .writeUint32(self.transactionId) \
             .data
 
     def __str__(self):
         return 'EndDataPacket: ' + "\n" \
-            + "\t" + 'cmdtype: ' + str(self.cmdtype) + "\n" \
+            + "\t" + 'type: ' + str(self.type) + "\n" \
             + "\t" + 'transactionId: ' + str(self.transactionId) + "\n" \
             + "\t" + 'data: ' + str(self.data) + "\n"

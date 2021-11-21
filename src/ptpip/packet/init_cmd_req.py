@@ -2,6 +2,7 @@ import socket
 import struct
 import uuid
 
+from ptpip.constants.packet_type import PacketType
 from ptpip.constants.data_object_transfer_mode import DataObjectTransferMode
 
 from ptpip.data_object.data_object import DataObject
@@ -19,7 +20,7 @@ class InitCmdReq(Packet):
         dataObjectTransferMode: DataObjectTransferMode = None
     ):
         super(InitCmdReq, self).__init__(
-            1,
+            PacketType.InitCmdReq,
             data = data,
             transactionId = transactionId,
             dataObject = dataObject,
@@ -37,13 +38,13 @@ class InitCmdReq(Packet):
 
     def pack(self):
         return StreamWriter() \
-            .writeUint32(self.cmdtype) \
+            .writeUint32(self.type.value) \
             .writeBytes(self.guid) \
             .writeBytes(self.hostname) \
             .data
 
     def __str__(self):
         return 'InitCmdReq: ' + "\n" \
-            + "\t" + 'cmdtype: ' + str(self.cmdtype) + "\n" \
+            + "\t" + 'type: ' + str(self.type) + "\n" \
             + "\t" + 'guid: ' + str(self.guid) + "\n" \
             + "\t" + 'hostname: ' + str(self.hostname) + "\n"

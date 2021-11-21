@@ -1,5 +1,6 @@
 import struct
 
+from ptpip.constants.packet_type import PacketType
 from ptpip.constants.response_code import ResponseCode
 from ptpip.constants.data_object_transfer_mode import DataObjectTransferMode
 
@@ -19,7 +20,7 @@ class CmdResponse(Packet):
         code = None
     ):
         super(CmdResponse, self).__init__(
-            7,
+            PacketType.CmdResponse,
             data = data,
             transactionId = transactionId,
             dataObject = dataObject,
@@ -37,11 +38,9 @@ class CmdResponse(Packet):
             self.transactionId = reader.readUint32()
             self.args = reader.readRest()
 
-            print(str(self))
-
     def __str__(self):
         return 'CmdResponse: ' + "\n" \
-            + "\t" + 'cmdtype: ' + str(self.cmdtype) + "\n" \
+            + "\t" + 'type: ' + str(self.type) + "\n" \
             + "\t" + 'code: ' + str(self.code) + "\n" \
             + "\t" + 'transactionId: ' + str(self.transactionId) + "\n" \
             + "\t" + 'args: ' + str(self.args) + "\n"

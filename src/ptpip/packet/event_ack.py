@@ -1,5 +1,6 @@
 import struct
 
+from ptpip.constants.packet_type import PacketType
 from ptpip.constants.data_object_transfer_mode import DataObjectTransferMode
 
 from ptpip.data_object.data_object import DataObject
@@ -17,7 +18,7 @@ class EventAck(Packet):
         sessionId = None
     ):
         super(EventAck, self).__init__(
-            4,
+            PacketType.EventAck,
             data = data,
             transactionId = transactionId,
             dataObject = dataObject,
@@ -29,4 +30,4 @@ class EventAck(Packet):
 
     def __str__(self):
         return 'EventAck: ' + "\n" \
-            + "\t" + 'cmdtype: ' + str(self.cmdtype) + "\n"
+            + "\t" + 'type: ' + str(self.type) + "\n"

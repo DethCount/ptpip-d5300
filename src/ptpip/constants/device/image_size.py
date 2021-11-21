@@ -1,0 +1,9 @@
+from enum import Enum
+
+class ImageSize(Enum):
+	Pix2144x1424 = '2144x1424' # 3MP
+	Pix2992x2000 = '2992x2000' # 6MP
+	Pix3216x2136 = '3216x2136' # 6.9MP
+	Pix4288x2848 = '4288x2848' # 12.2MP
+	Pix4496x3000 = '4496x3000' # 13.5MP
+	Pix6000x4000 = '6000x4000' # 24MP
