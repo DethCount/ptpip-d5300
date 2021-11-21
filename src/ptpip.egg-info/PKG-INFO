@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: ptpip
-Version: 0.0.6
+Version: 0.0.7
 Summary: PTP / IP client
 Home-page: https://github.com/dethcount/d5300-ptpip
 Author: Dethcount
@@ -73,13 +73,38 @@ PtpIpClient(usePtpIpClient)
 OR use CLI
 
 ```
+# Main Help
 python3 console.py --help
-python3 console.py device  --discover=True --report=d5300.html
+
+# Generate full device report
+python3 console.py device  --discover=True --more=True --report=d5300.html
+
+# Get device property description for ExposureIndex
 python3 console.py propdesc --name=ExposureIndex
+
+# Get device property value for ExposureIndex
 python3 console.py getprop --debug=False --name=ExposureIndex
+
+# Set device property value for ExposureIndex to 6400
 python3 console.py setprop --debug=False --name=ExposureIndex --value=6400
+
+# Take a picture with current device configuration and redirect output to cap.jpg
 python3 console.py capture --debug=False > cap.jpg
+
+# Take a picture with current device configuration and save it to cap.jpg
 python3 console.py capture --debug=False --output=cap.jpg
+
+# List all storage ids
+python3 console.py storageids
+
+# Show storage info
+python3 console.py storage --id=65537
+
+# Count objects in given storage
+python3 console.py numobjects --id=65537
+
+# Lists all Jpeg files on main storage (SDCard)
+python3 console.py objhandles --id=65537 --formatname=ExifJpeg
 ```
 
 [Sample report for Nikon d5300](https://dethcount.github.io/ptpip-d5300/d5300.html)
