@@ -1,6 +1,7 @@
 from enum import Enum
 
 class ResponseCode(Enum):
+    # PTP Response Code 0x2000..0x2FFF
     Undefined                                = 0x2000
     OK                                       = 0x2001
     GeneralError                             = 0x2002
@@ -38,6 +39,7 @@ class ResponseCode(Enum):
     NoStreamEnabled                          = 0x2022
     InvalidDataset                           = 0x2023
 
+    # Vendor Extension Response Code 0xA000..0xA7FF
     NIKON_HardwareError                      = 0xA001
     NIKON_OutOfFocus                         = 0xA002
     NIKON_ChangeCameraModeFailed             = 0xA003
@@ -52,7 +54,8 @@ class ResponseCode(Enum):
     NIKON_MfDriveStepEnd                     = 0xA00C
     NIKON_MfDriveStepInsufficiency           = 0xA00E
     NIKON_AdvancedTransferCancel             = 0xA022
-    NIKON_UnknownError                       = 0xA081
+
+    NIKON_UnknownError                       = 0xA081 # ObjectFormatError ?!
 
     NIKON_Bulb_Release_Busy                  = 0xA200
     NIKON_Silent_Release_Busy                = 0xA201
@@ -62,6 +65,7 @@ class ResponseCode(Enum):
     NIKON_MirrorUpCaptureAlreadyStart        = 0xA208
     NIKON_InvalidSBAttributeValue            = 0xA209
 
+    # MTP Response Code 0xA800..0xAFFF
     MTP_Undefined                            = 0xA800
     MTP_InvalidObjectPropCode                = 0xA801
     MTP_InvalidObjectPropFormat              = 0xA802

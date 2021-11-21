@@ -1,6 +1,7 @@
 from enum import Enum
 
 class EventType(Enum):
+    # PTP Event Code 0x4000..0x4FFF
     Undefined                   = 0x4000
     CancelTransaction           = 0x4001
     ObjectAdded                 = 0x4002
@@ -17,10 +18,12 @@ class EventType(Enum):
     CaptureComplete             = 0x400D
     UnreportedStatus            = 0x400E
 
+    # Vendor Extension Event Code 0xC000..0xC7FF
     ObjectAddedInSdram          = 0xC101
     CaptureCompleteRecInSdram   = 0xC102
     RecordingInterrupted        = 0xC105
 
+    # MTP Event Code 0xC800..0xC8FF
     ObjectPropChanged           = 0xC801
     ObjectPropDescChanged       = 0xC802
     ObjectReferenceChanged      = 0xC803

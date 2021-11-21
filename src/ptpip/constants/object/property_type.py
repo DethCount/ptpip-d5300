@@ -3,6 +3,7 @@ from enum import Enum
 class ObjectPropertyType(Enum):
     Undefined                           = 0x0000 # 0
 
+    # MTP Object Prop Code 0xDC00..0xDFFF
     StorageID                           = 0xDC01 # 56321
     ObjectFormat                        = 0xDC02 # 56322 @see ObjectFormat
     ProtectionStatus                    = 0xDC03 # 56323 @see OnOffProperty

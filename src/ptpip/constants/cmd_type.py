@@ -1,5 +1,6 @@
 from enum import Enum
 class CmdType(Enum):
+    # PTP Operation Code 0x1000..0x1FFF
     Undefined                   = 0x1000
     GetDeviceInfo               = 0x1001
     OpenSession                 = 0x1002
@@ -38,6 +39,8 @@ class CmdType(Enum):
     GetFilesystemManifest       = 0x1023
     GetStreamInfo               = 0x1024
     GetStream                   = 0x1025
+
+    # Vendor Extension Operation Code 0x9000..0x97FF
 
     GetProfileAllData           = 0x9006
     SendProfileData             = 0x9007
@@ -117,6 +120,7 @@ class CmdType(Enum):
 
     GetDevicePropEx             = 0x9504
 
+    # MTP Operation Code 0x9800..0x9FFF
     GetObjectPropsSupported     = 0x9801
     GetObjectPropDesc           = 0x9802
     GetObjectPropValue          = 0x9803

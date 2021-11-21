@@ -1,6 +1,7 @@
 from enum import Enum
 
 class DevicePropertyType(Enum):
+    # PTP Device Prop Code 0x5000..0x5FFF
     Undefined                       = 0x5000
     BatteryLevel                    = 0x5001
     FunctionalMode                  = 0x5002 # @see FunctionalMode
@@ -36,6 +37,7 @@ class DevicePropertyType(Enum):
 
     AudioVolume                     = 0x502C
 
+    # Vendor Extension Device Prop Code 0xD000..0xD3FF
     ErrorInfo                       = 0xD006
     ShutterSpeed                    = 0xD00F # @see ShutterSpeed
 
@@ -144,6 +146,7 @@ class DevicePropertyType(Enum):
     ModelID                         = 0xD302
     UseDeviceStageFlag              = 0xD303
 
+    # MTP Device Prop Code 0xD400..0xD7FF
     SynchronizationPartner          = 0xD401
     DeviceFriendlyName              = 0xD402
     Volume                          = 0xD403

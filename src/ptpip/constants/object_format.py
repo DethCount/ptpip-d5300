@@ -3,6 +3,7 @@ from enum import Enum
 class ObjectFormat(Enum):
     Any                             = 0x0000
 
+    # PTP Object Format Code 0x3000..0x3FFF
     UndefinedAncilliary             = 0x3000
     Association                     = 0x3001
     Script                          = 0x3002
@@ -36,12 +37,14 @@ class ObjectFormat(Enum):
     Dng                             = 0x3811
     Heif                            = 0x3812
 
+    # Vendor Extension Object Format Code 0xB000..0xB7FF
     NetworkAssociation              = 0xB102
     RAW                             = 0xb101
 
     M4a                             = 0xB215
     Artist                          = 0xB218
 
+    # MTP Object Format Code 0xB800..0xBFFF
     UndefinedFirmware               = 0xB800
     UndefinedFirmwareAndroid        = 0xB802
     WindowsImageFormat              = 0xB881
@@ -97,3 +100,5 @@ class ObjectFormat(Enum):
     VCalendar1                      = 0xBE02
     VCalendar2                      = 0xBE03
     UndefinedWindowsExecutable      = 0xBE80
+
+    All                             = 0xFFFF
