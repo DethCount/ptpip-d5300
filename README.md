@@ -86,8 +86,11 @@ python3 console.py storage --id=65537
 # Count objects in given storage
 python3 console.py numobjects --id=65537
 
-# Lists all Jpeg files on main storage (SDCard)
+# Lists all Jpeg files on main storage (SDCard) (including example 689504257 handle)
 python3 console.py objhandles --id=65537 --formatname=ExifJpeg
+
+# Show object info
+python3 console.py objinfo --handle=689504257
 ```
 
 [Sample report for Nikon d5300](https://dethcount.github.io/ptpip-d5300/d5300.html)
