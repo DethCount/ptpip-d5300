@@ -33,7 +33,7 @@ class StorageInfo():
 			self.description = reader.readUint8()
 			self.volumeLabel = reader.readString()
 
-	def sizeof(self, num, suffix = "B"):
+	def sizeof(num, suffix = "B"):
 		for unit in ["", "Ki", "Mi", "Gi", "Ti", "Pi", "Ei", "Zi"]:
 			if abs(num) < 1024.0:
 				return f"{num:3.1f}{unit}{suffix}"
@@ -61,8 +61,8 @@ class StorageInfo():
 					if self.accessCapability is not None \
 					else ''
 			) + "\n" \
-			+ "\t" + 'maxCapacity: ' + self.sizeof(self.maxCapacity) + "\n" \
-			+ "\t" + 'freeSpaceInBytes: ' + self.sizeof(self.freeSpaceInBytes) + "\n" \
+			+ "\t" + 'maxCapacity: ' + StorageInfo.sizeof(self.maxCapacity) + "\n" \
+			+ "\t" + 'freeSpaceInBytes: ' + StorageInfo.sizeof(self.freeSpaceInBytes) + "\n" \
 			+ "\t" + 'freeSpaceInImages: ' + str(self.freeSpaceInImages) + "\n" \
 			+ "\t" + 'description: ' + str(self.description) + "\n" \
 			+ "\t" + 'volumeLabel: ' + str(self.volumeLabel) + "\n"

@@ -13,6 +13,7 @@ from ptpip.data_object.data_object import DataObject
 from ptpip.data_object.device_info import DeviceInfo
 from ptpip.data_object.device_prop_desc import DevicePropDesc
 from ptpip.data_object.object_handle_array import ObjectHandleArray
+from ptpip.data_object.object_info import ObjectInfo
 from ptpip.data_object.storage_id_array import StorageIdArray
 from ptpip.data_object.storage_info import StorageInfo
 
@@ -114,21 +115,24 @@ class Connection():
             self.objectQueue.append(dataObject)
             return
 
-        if dataObject.packet.cmd == CmdType.GetDeviceInfo:
-            device = DeviceInfo(dataObject.packet, dataObject.data)
-            self.objectQueue.append(device)
-            return
-
-        if dataObject.packet.cmd == CmdType.GetObject:
-            self.objectQueue.append(dataObject)
-            return
-
         if dataObject.packet.cmd == CmdType.GetEvent:
             events = EventFactory(dataObject.data).getEvents()
 
             for event in events:
                 self.eventQueue.append(event)
 
+            return
+
+        if dataObject.packet.cmd == CmdType.GetDeviceInfo:
+            device = DeviceInfo(dataObject.packet, dataObject.data)
+            self.objectQueue.append(device)
+            return
+
+        if dataObject.packet.cmd == CmdType.GetDevicePropDesc \
+            and dataObject.data != None \
+        :
+            devicePropDesc = DevicePropDesc(dataObject.packet, dataObject.data)
+            self.objectQueue.append(devicePropDesc)
             return
 
         if dataObject.packet.cmd == CmdType.GetStorageIDs:
@@ -146,12 +150,8 @@ class Connection():
             self.objectQueue.append(handles)
             return
 
-        if dataObject.packet.cmd == CmdType.GetDevicePropDesc \
-            and dataObject.data != None \
-        :
-            devicePropDesc = DevicePropDesc(dataObject.packet, dataObject.data)
-            self.objectQueue.append(devicePropDesc)
-
+        if dataObject.packet.cmd == CmdType.GetObjectInfo:
+            self.objectQueue.append(ObjectInfo(dataObject.packet, dataObject.data))
             return
 
         self.objectQueue.append(dataObject)
