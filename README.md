@@ -91,6 +91,9 @@ python3 console.py objhandles --id=65537 --formatname=ExifJpeg
 
 # Show object info
 python3 console.py objinfo --handle=689504257
+
+# Show object format supported properties
+python3 console.py formatprops --name=ExifJpeg --names=True
 ```
 
 [Sample report for Nikon d5300](https://dethcount.github.io/ptpip-d5300/d5300.html)

@@ -23,6 +23,7 @@ from ptpip.data_object.device_info import DeviceInfo
 from ptpip.data_object.device_prop_desc import DevicePropDesc
 from ptpip.data_object.object_handle_array import ObjectHandleArray
 from ptpip.data_object.object_info import ObjectInfo
+from ptpip.data_object.object_prop_code_array import ObjectPropCodeArray
 from ptpip.data_object.storage_id_array import StorageIdArray
 from ptpip.data_object.storage_info import StorageInfo
 
@@ -404,6 +405,33 @@ class PtpIpClient():
             if objData.packet.transactionId == transactionId:
                 self.conn.objectQueue.remove(objData)
                 if isinstance(objData, ObjectInfo):
+                    return objData
+                elif isinstance(objData, CmdResponse):
+                    return objData.code
+                else:
+                    return None
+
+    async def getObjectPropsSupported(
+        self,
+        objectFormatId,
+        delay = 0,
+        transactionId = None
+    ):
+        if transactionId == None:
+            transactionId = self.conn.createTransaction()
+
+        cmd = CmdRequest(
+            transactionId = transactionId,
+            cmd = CmdType.GetObjectPropsSupported.value,
+            param1 = objectFormatId
+        )
+
+        self.conn.sendCmd(cmd)
+
+        async for objData in self.conn.listenObjectDataQueue(delay = delay):
+            if objData.packet.transactionId == transactionId:
+                self.conn.objectQueue.remove(objData)
+                if isinstance(objData, ObjectPropCodeArray):
                     return objData
                 elif isinstance(objData, CmdResponse):
                     return objData.code

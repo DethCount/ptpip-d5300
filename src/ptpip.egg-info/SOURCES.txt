@@ -16,6 +16,7 @@ src/ptpip/cli/get_device_prop_value.py
 src/ptpip/cli/get_num_objects.py
 src/ptpip/cli/get_object_handles.py
 src/ptpip/cli/get_object_info.py
+src/ptpip/cli/get_object_props_supported.py
 src/ptpip/cli/get_storage_ids.py
 src/ptpip/cli/get_storage_info.py
 src/ptpip/cli/init_capture.py
@@ -100,8 +101,10 @@ src/ptpip/data_object/device_prop_desc.py
 src/ptpip/data_object/obj_prop_desc.py
 src/ptpip/data_object/object_handle_array.py
 src/ptpip/data_object/object_info.py
+src/ptpip/data_object/object_prop_code_array.py
 src/ptpip/data_object/storage_id_array.py
 src/ptpip/data_object/storage_info.py
+src/ptpip/data_object/uint16_array.py
 src/ptpip/data_object/uint32_array.py
 src/ptpip/event/__init__.py
 src/ptpip/event/event.py

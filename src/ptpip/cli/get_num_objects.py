@@ -19,9 +19,9 @@ class GetNumObjectsCommand():
         objectFormat = self.objectFormatId
 
         if objectFormat is None \
-            and self.objectFormatName in ObjectFormat._value2member_map_ \
+            and self.objectFormatName is not None \
         :
-            objectFormat = ObjectFormat[self.objectFormatName].value \
+            objectFormat = ObjectFormat[self.objectFormatName].value
 
         response = await client.getNumObjects(
             self.storageId,

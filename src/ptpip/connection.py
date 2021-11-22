@@ -14,6 +14,7 @@ from ptpip.data_object.device_info import DeviceInfo
 from ptpip.data_object.device_prop_desc import DevicePropDesc
 from ptpip.data_object.object_handle_array import ObjectHandleArray
 from ptpip.data_object.object_info import ObjectInfo
+from ptpip.data_object.object_prop_code_array import ObjectPropCodeArray
 from ptpip.data_object.storage_id_array import StorageIdArray
 from ptpip.data_object.storage_info import StorageInfo
 
@@ -152,6 +153,10 @@ class Connection():
 
         if dataObject.packet.cmd == CmdType.GetObjectInfo:
             self.objectQueue.append(ObjectInfo(dataObject.packet, dataObject.data))
+            return
+
+        if dataObject.packet.cmd == CmdType.GetObjectPropsSupported:
+            self.objectQueue.append(ObjectPropCodeArray(dataObject.packet, dataObject.data))
             return
 
         self.objectQueue.append(dataObject)
