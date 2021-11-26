@@ -94,6 +94,13 @@ python3 console.py objinfo --handle=689504257
 
 # Show object format supported properties
 python3 console.py formatprops --name=ExifJpeg --names=True
+
+# Live view writing in cap.jpg at 60 fps
+python3 console.py liveimg --output=cap.jpg --fps=60
+
+# Show cap.jpg at 60fps in terminal using Viu : https://github.com/atanunq/viu
+while true; do $(viu cap.jpg); sleep 0.016666666666666666; done;
+
 ```
 
 [Sample report for Nikon d5300](https://dethcount.github.io/ptpip-d5300/d5300.html)

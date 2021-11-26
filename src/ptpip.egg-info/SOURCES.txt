@@ -13,6 +13,7 @@ src/ptpip/cli/__init__.py
 src/ptpip/cli/get_device_info.py
 src/ptpip/cli/get_device_prop_desc.py
 src/ptpip/cli/get_device_prop_value.py
+src/ptpip/cli/get_live_view_image.py
 src/ptpip/cli/get_num_objects.py
 src/ptpip/cli/get_object_handles.py
 src/ptpip/cli/get_object_info.py
@@ -95,9 +96,11 @@ src/ptpip/constants/device/wb_bracketing_step.py
 src/ptpip/constants/device/wb_tune_fluorescent.py
 src/ptpip/constants/device/white_balance.py
 src/ptpip/data_object/__init__.py
+src/ptpip/data_object/auto_focus_frame.py
 src/ptpip/data_object/data_object.py
 src/ptpip/data_object/device_info.py
 src/ptpip/data_object/device_prop_desc.py
+src/ptpip/data_object/live_view_object.py
 src/ptpip/data_object/obj_prop_desc.py
 src/ptpip/data_object/object_handle_array.py
 src/ptpip/data_object/object_info.py

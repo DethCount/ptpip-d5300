@@ -15,6 +15,37 @@ class StreamReader():
         self.pos = pos2
         return val
 
+    def readToPos(self, pos):
+        val = self.data[self.pos:pos]
+        self.pos = pos
+        return val
+
+    def readUntilUint16(self, value):
+        val = self.readUint16()
+        while val != value and self.pos < len(self.data):
+            self.pos -= 1
+            val = self.readUint16()
+
+        if val == value:
+            return True
+
+        self.pos = len(self.data)
+
+        return False
+
+    def readUntilUint32(self, value):
+        val = self.readUint32()
+        while val != value and self.pos < len(self.data):
+            self.pos -= 1
+            val = self.readUint32()
+
+        if val == value:
+            return True
+
+        self.pos = len(self.data)
+
+        return False
+
     def readRest(self):
         pos2 = len(self.data)
         val = self.data[self.pos:pos2]

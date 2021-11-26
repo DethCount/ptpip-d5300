@@ -21,6 +21,7 @@ from ptpip.packet.cmd_response import CmdResponse
 from ptpip.data_object.data_object import DataObject
 from ptpip.data_object.device_info import DeviceInfo
 from ptpip.data_object.device_prop_desc import DevicePropDesc
+from ptpip.data_object.live_view_object import LiveViewObject
 from ptpip.data_object.object_handle_array import ObjectHandleArray
 from ptpip.data_object.object_info import ObjectInfo
 from ptpip.data_object.object_prop_code_array import ObjectPropCodeArray
@@ -435,6 +436,77 @@ class PtpIpClient():
                     return objData
                 elif isinstance(objData, CmdResponse):
                     return objData.code
+                else:
+                    return None
+
+    async def startLiveView(
+        self,
+        delay = 0,
+        transactionId = None
+    ):
+        if transactionId == None:
+            transactionId = self.conn.createTransaction()
+
+        cmd = CmdRequest(
+            transactionId = transactionId,
+            cmd = CmdType.StartLiveView.value
+        )
+
+        self.conn.sendCmd(cmd)
+
+        async for objData in self.conn.listenObjectDataQueue(delay = delay):
+            if objData.packet.transactionId == transactionId:
+                self.conn.objectQueue.remove(objData)
+                if isinstance(objData.packet, CmdResponse):
+                    return objData.packet.code
+                else:
+                    return None
+
+    async def getLiveViewImage(
+        self,
+        delay = 0,
+        transactionId = None
+    ):
+        if transactionId == None:
+            transactionId = self.conn.createTransaction()
+
+        cmd = CmdRequest(
+            transactionId = transactionId,
+            cmd = CmdType.GetLiveViewImage.value
+        )
+
+        self.conn.sendCmd(cmd)
+
+        async for objData in self.conn.listenObjectDataQueue(delay = delay):
+            if objData.packet.transactionId == transactionId:
+                self.conn.objectQueue.remove(objData)
+                if isinstance(objData, LiveViewObject):
+                    return objData
+                elif isinstance(objData.packet, CmdResponse):
+                    return objData.packet.code
+                else:
+                    return None
+
+    async def endLiveView(
+        self,
+        delay = 0,
+        transactionId = None
+    ):
+        if transactionId == None:
+            transactionId = self.conn.createTransaction()
+
+        cmd = CmdRequest(
+            transactionId = transactionId,
+            cmd = CmdType.EndLiveView.value
+        )
+
+        self.conn.sendCmd(cmd)
+
+        async for objData in self.conn.listenObjectDataQueue(delay = delay):
+            if objData.packet.transactionId == transactionId:
+                self.conn.objectQueue.remove(objData)
+                if isinstance(objData.packet, CmdResponse):
+                    return objData.packet.code
                 else:
                     return None
 

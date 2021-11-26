@@ -9,6 +9,7 @@ from ptpip.client import PtpIpClient
 from ptpip.cli.get_device_info import GetDeviceInfoCommand
 from ptpip.cli.get_device_prop_desc import GetDevicePropDescCommand
 from ptpip.cli.get_device_prop_value import GetDevicePropValueCommand
+from ptpip.cli.get_live_view_image import GetLiveViewImageCommand
 from ptpip.cli.get_num_objects import GetNumObjectsCommand
 from ptpip.cli.get_object_handles import GetObjectHandlesCommand
 from ptpip.cli.get_object_info import GetObjectInfoCommand
@@ -180,6 +181,20 @@ def getObjectInfo(host, port, debug, handle):
 def getObjectPropsSupported(host, port, debug, id, name, names):
     PtpIpClient(
         GetObjectPropsSupportedCommand(id, name, names).run,
+        host = host,
+        port = port,
+        debug = debug
+    )
+
+@cli.command('liveimg')
+@click.option('--host', default=None, help='Hostname')
+@click.option('--port', default=None, help='Port')
+@click.option('--debug', default=False, help='Debug mode')
+@click.option('--output', default=None, help='Ouput filepath')
+@click.option('--fps', default=None, help='Frames per second', type=float)
+def getLiveViewImage(host, port, debug, output, fps):
+    PtpIpClient(
+        GetLiveViewImageCommand(output, fps).run,
         host = host,
         port = port,
         debug = debug

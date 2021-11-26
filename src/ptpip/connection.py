@@ -12,6 +12,7 @@ from ptpip.constants.data_object_transfer_mode import DataObjectTransferMode
 from ptpip.data_object.data_object import DataObject
 from ptpip.data_object.device_info import DeviceInfo
 from ptpip.data_object.device_prop_desc import DevicePropDesc
+from ptpip.data_object.live_view_object import LiveViewObject
 from ptpip.data_object.object_handle_array import ObjectHandleArray
 from ptpip.data_object.object_info import ObjectInfo
 from ptpip.data_object.object_prop_code_array import ObjectPropCodeArray
@@ -157,6 +158,10 @@ class Connection():
 
         if dataObject.packet.cmd == CmdType.GetObjectPropsSupported:
             self.objectQueue.append(ObjectPropCodeArray(dataObject.packet, dataObject.data))
+            return
+
+        if dataObject.packet.cmd == CmdType.GetLiveViewImage:
+            self.objectQueue.append(LiveViewObject(dataObject.packet, dataObject.data))
             return
 
         self.objectQueue.append(dataObject)
